@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KPI Evaluation System · GASSTerus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { jakarta: ['"Plus Jakarta Sans"','sans-serif'] },
+      colors: {
+        blue: { DEFAULT:'#005EB8', dark:'#004a94', light:'#EBF4FF', mid:'#3B82F6' },
+        green: { DEFAULT:'#00A651', dark:'#007A3D', light:'#E8F7EF' },
+        slate: { 50:'#F8FAFC', 100:'#F1F5F9', 200:'#E2E8F0', 300:'#CBD5E1',
+                 400:'#94A3B8', 500:'#64748B', 600:'#475569', 700:'#334155',
+                 800:'#1E293B', 900:'#0F172A' }
+      }
+    }
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Plus Jakarta Sans",sans-serif;background:#F8FAFC;color:#0F172A;min-height:100vh}
+.page{display:none!important}
+.page.active{display:block!important}
+#page-landing.active{display:flex!important}
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#F1F5F9}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8}
+/* Sidebar */
+#sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+#sidebar.open{transform:translateX(0)}
+@media(min-width:1024px){
+  #sidebar{transform:none!important;position:relative!important;flex-shrink:0}
+  #sidebar-overlay{display:none!important}
+}
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .3s ease both}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse-dot{animation:pulse-dot 1.5s ease infinite}
+/* Badge */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.3px}
+/* Table */
+.data-table{width:100%;border-collapse:separate;border-spacing:0}
+.data-table th{background:#F8FAFC;font-size:.75rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.6px;padding:10px 14px;border-bottom:2px solid #E2E8F0;white-space:nowrap}
+.data-table td{padding:11px 14px;border-bottom:1px solid #F1F5F9;font-size:.85rem;vertical-align:middle}
+.data-table tbody tr:hover{background:#F8FAFC}
+/* Card */
+.card{background:#fff;border-radius:16px;border:1px solid #E2E8F0;padding:20px}
+/* Input */
+.inp{width:100%;border:1.5px solid #E2E8F0;border-radius:10px;padding:9px 14px;font-size:.88rem;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
+.inp:focus{border-color:#005EB8;box-shadow:0 0 0 3px rgba(0,94,184,.1)}
+.inp-label{display:block;font-size:.78rem;font-weight:700;color:#475569;margin-bottom:5px;letter-spacing:.2px}
+/* Btn */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;font-weight:700;font-size:.85rem;font-family:inherit;cursor:pointer;border:none;transition:all .2s;text-decoration:none;white-space:nowrap}
+.btn-primary{background:#005EB8;color:#fff}
+.btn-primary:hover{background:#004a94;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,94,184,.3)}
+.btn-green{background:#00A651;color:#fff}
+.btn-green:hover{background:#007A3D;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,166,81,.3)}
+.btn-outline{background:#fff;color:#005EB8;border:1.5px solid #005EB8}
+.btn-outline:hover{background:#EBF4FF}
+.btn-ghost{background:transparent;color:#64748B;border:1.5px solid #E2E8F0}
+.btn-ghost:hover{background:#F1F5F9;color:#0F172A}
+.btn-danger{background:#EF4444;color:#fff}
+.btn-danger:hover{background:#DC2626}
+.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:8px}
+.btn-xs{padding:4px 10px;font-size:.72rem;border-radius:6px;gap:4px}
+/* Nav item */
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-weight:600;font-size:.85rem;color:#64748B;cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:#EBF4FF;color:#005EB8}
+.nav-item.active{background:#005EB8;color:#fff}
+.nav-item.active svg{color:#fff!important}
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-backdrop.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.15)}
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-item{display:flex;align-items:center;gap:10px;background:#1E293B;color:#fff;padding:12px 18px;border-radius:12px;font-size:.84rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideIn .3s ease;min-width:240px}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.toast-success{border-left:4px solid #00A651}
+.toast-error{border-left:4px solid #EF4444}
+.toast-info{border-left:4px solid #005EB8}
+/* Report print area */
+#report-area{background:#fff;font-family:"Plus Jakarta Sans",sans-serif;padding:32px;max-width:800px}
+/* Rich editor */
+.rich-editor{border:1.5px solid #E2E8F0;border-radius:10px;min-height:80px;padding:10px 14px;font-size:.86rem;outline:none;line-height:1.6}
+.rich-editor:focus{border-color:#005EB8}
+/* Step indicator */
+.step-num{width:28px;height:28px;border-radius:50%;background:#005EB8;color:#fff;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* Score big */
+.score-display{font-size:4rem;font-weight:900;line-height:1;color:#005EB8}
+.score-good{color:#00A651}
+.score-mid{color:#F59E0B}
+.score-low{color:#EF4444}
+/* Stat card */
+.stat-card{background:linear-gradient(135deg,#005EB8,#0080FF);color:#fff;border-radius:16px;padding:20px}
+.stat-card-green{background:linear-gradient(135deg,#00A651,#22C55E)}
+.stat-card-purple{background:linear-gradient(135deg,#7C3AED,#A78BFA)}
+.stat-card-orange{background:linear-gradient(135deg,#F59E0B,#FB923C)}
+/* Toggle */
+.toggle{position:relative;display:inline-flex;width:44px;height:24px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#E2E8F0;border-radius:12px;transition:.2s}
+.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked~.toggle-slider{background:#005EB8}
+.toggle input:checked~.toggle-slider:before{transform:translateX(20px)}
+/* Bypass banner */
+#bypass-banner{display:none;background:linear-gradient(90deg,#F59E0B,#FB923C);color:#fff;text-align:center;padding:8px;font-size:.8rem;font-weight:700;letter-spacing:.3px}
+#bypass-banner.show{display:block}
+</style>
+</head>
+<body class="font-jakarta">
+
+<!-- ============================================================ -->
+<!-- BYPASS BANNER -->
+<!-- ============================================================ -->
+<div id="bypass-banner">⚡ BYPASS MODE AKTIF — Tampilan Preview CPanel (Tanpa Autentikasi)</div>
+
+<!-- ============================================================ -->
+<!-- TOAST CONTAINER -->
+<!-- ============================================================ -->
+<div id="toast"></div>
+
+<!-- ============================================================ -->
+<!-- APP SHELL -->
+<!-- ============================================================ -->
+<div id="app-shell" class="flex min-h-screen" style="display:none!important">
+
+  <!-- SIDEBAR OVERLAY -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden lg:hidden" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed lg:sticky top-0 h-screen w-64 bg-white border-r border-slate-200 z-50 flex flex-col overflow-y-auto">
+    <!-- Logo -->
+    <div class="p-5 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-blue flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+        </div>
+        <div>
+          <div class="font-black text-slate-900 text-sm leading-tight">GASSTerus!</div>
+          <div class="text-slate-400 text-xs font-medium">KPI System</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User chip -->
+    <div class="px-4 py-3 border-b border-slate-100">
+      <div class="flex items-center gap-3 bg-slate-50 rounded-12 p-3" style="border-radius:12px">
+        <div id="sidebar-avatar" class="w-8 h-8 rounded-full bg-blue flex items-center justify-center text-white font-bold text-xs flex-shrink-0">A</div>
+        <div class="min-w-0">
+          <div id="sidebar-name" class="font-700 text-slate-800 text-xs truncate font-bold">Loading...</div>
+          <div id="sidebar-role" class="text-slate-400 text-xs font-medium">User</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 p-3 flex flex-col gap-1">
+      <div class="text-slate-400 font-bold text-xs uppercase tracking-widest px-2 py-2">Menu</div>
+      <button class="nav-item" id="nav-dashboard" onclick="navigate('dashboard')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" id="nav-kpi-eval" onclick="navigate('kpi-eval')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Evaluasi KPI
+      </button>
+      <button class="nav-item hidden" id="nav-kpi-mgmt" onclick="navigate('kpi-mgmt')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Manajemen KPI
+      </button>
+      <button class="nav-item hidden" id="nav-user-mgmt" onclick="navigate('user-mgmt')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Manajemen User
+      </button>
+
+      <div class="text-slate-400 font-bold text-xs uppercase tracking-widest px-2 py-2 mt-2">Lainnya</div>
+      <button class="nav-item" onclick="navigate('guide')">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Panduan
+      </button>
+    </nav>
+
+    <!-- Logout -->
+    <div class="p-4 border-t border-slate-100">
+      <button onclick="doLogout()" class="nav-item w-full text-red-500 hover:bg-red-50 hover:text-red-600">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Keluar
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="flex-1 min-w-0 flex flex-col">
+    <!-- Topbar -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
+      <button class="lg:hidden p-2 rounded-lg hover:bg-slate-100" onclick="openSidebar()">
+        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div id="topbar-title" class="font-black text-slate-800 text-base">Dashboard</div>
+      <div class="ml-auto flex items-center gap-2">
+        <span id="topbar-year-badge" class="badge bg-blue-light text-blue text-xs hidden">2026</span>
+      </div>
+    </header>
+
+    <!-- PAGE CONTAINER -->
+    <main class="flex-1 p-4 lg:p-6 overflow-auto">
+
+      <!-- ======================================================= -->
+      <!-- PAGE: DASHBOARD -->
+      <!-- ======================================================= -->
+      <div id="page-dashboard" class="page fade-up">
+        <div class="mb-6">
+          <h1 class="text-2xl font-black text-slate-900">Dashboard</h1>
+          <p class="text-slate-500 text-sm mt-1">Ringkasan aktivitas evaluasi KPI</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="stat-card rounded-2xl p-4">
+            <div class="text-blue-100 text-xs font-bold uppercase tracking-wider mb-2">Total Evaluasi</div>
+            <div class="text-3xl font-black" id="stat-total">0</div>
+            <div class="text-blue-200 text-xs mt-1">Semua waktu</div>
+          </div>
+          <div class="stat-card-green rounded-2xl p-4 text-white">
+            <div class="text-green-100 text-xs font-bold uppercase tracking-wider mb-2">Bulan Ini</div>
+            <div class="text-3xl font-black" id="stat-month">0</div>
+            <div class="text-green-100 text-xs mt-1">Evaluasi baru</div>
+          </div>
+          <div class="stat-card-orange rounded-2xl p-4 text-white">
+            <div class="text-orange-100 text-xs font-bold uppercase tracking-wider mb-2">Rata-rata SF</div>
+            <div class="text-3xl font-black" id="stat-avg-sf">—</div>
+            <div class="text-orange-100 text-xs mt-1">Skor kinerja</div>
+          </div>
+          <div class="stat-card-purple rounded-2xl p-4 text-white">
+            <div class="text-purple-100 text-xs font-bold uppercase tracking-wider mb-2">Penilai Aktif</div>
+            <div class="text-3xl font-black" id="stat-evaluators">0</div>
+            <div class="text-purple-100 text-xs mt-1">Unik</div>
+          </div>
+        </div>
+
+        <!-- Filter row -->
+        <div class="card mb-4">
+          <div class="flex flex-wrap gap-3 items-center">
+            <div class="flex-1 min-w-0">
+              <input type="text" id="dash-search" class="inp" placeholder="🔍 Cari nama karyawan, KPI..." oninput="filterDashboard()"/>
+            </div>
+            <select id="dash-year-filter" class="inp w-auto" onchange="filterDashboard()">
+              <option value="">Semua Tahun</option>
+            </select>
+            <button class="btn btn-primary" onclick="loadDashboard()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="card overflow-hidden p-0">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="font-bold text-slate-800">Log Evaluasi KPI</div>
+            <span id="dash-count" class="badge bg-slate-100 text-slate-600">0 data</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead><tr>
+                <th>Waktu</th><th>Penilai</th><th>Karyawan</th><th>Item KPI</th>
+                <th>Tahun</th><th>Skor</th><th>SF</th><th>Aksi</th>
+              </tr></thead>
+              <tbody id="dash-tbody">
+                <tr><td colspan="8" class="text-center text-slate-400 py-10">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- PAGE: KPI EVALUATION -->
+      <!-- ======================================================= -->
+      <div id="page-kpi-eval" class="page fade-up">
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900">Evaluasi KPI</h1>
+            <p class="text-slate-500 text-sm mt-1">Isi realisasi dan hitung skor KPI karyawan</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetEvalForm()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Reset
+          </button>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4">
+          <!-- LEFT COLUMN: Form Input -->
+          <div class="lg:col-span-2 space-y-4">
+
+            <!-- Step 1: Identitas -->
+            <div class="card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="step-num">1</div>
+                <div>
+                  <div class="font-bold text-slate-800">Identitas Karyawan</div>
+                  <div class="text-slate-400 text-xs">Pilih tahun, nama, dan item KPI</div>
+                </div>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="inp-label">Tahun KPI *</label>
+                  <select id="eval-year" class="inp" onchange="onEvalYearChange()">
+                    <option value="">— Pilih Tahun —</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="inp-label">Nama Karyawan *</label>
+                  <select id="eval-name" class="inp" onchange="onEvalNameChange()" disabled>
+                    <option value="">— Pilih Nama —</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="inp-label">NIK</label>
+                  <input type="text" id="eval-nik" class="inp" placeholder="NIK karyawan"/>
+                </div>
+                <div>
+                  <label class="inp-label">Jabatan</label>
+                  <input type="text" id="eval-jabatan" class="inp" placeholder="Jabatan karyawan"/>
+                </div>
+                <div>
+                  <label class="inp-label">Nama Atasan</label>
+                  <input type="text" id="eval-atasan" class="inp" placeholder="Nama atasan langsung"/>
+                </div>
+                <div>
+                  <label class="inp-label">Jabatan Atasan</label>
+                  <input type="text" id="eval-jabatan-atasan" class="inp" placeholder="Jabatan atasan"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Pilih KPI -->
+            <div class="card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="step-num">2</div>
+                <div>
+                  <div class="font-bold text-slate-800">Pilih Item KPI</div>
+                  <div class="text-slate-400 text-xs">Hanya menampilkan KPI yang relevan</div>
+                </div>
+              </div>
+              <div>
+                <label class="inp-label">Item KPI *</label>
+                <select id="eval-objective" class="inp" onchange="onEvalObjectiveChange()" disabled>
+                  <option value="">— Pilih Item KPI —</option>
+                </select>
+              </div>
+              <div id="eval-formula-box" class="hidden mt-3 p-3 bg-blue-light rounded-xl text-blue text-xs font-semibold border border-blue/10">
+                <span id="eval-formula-text"></span>
+              </div>
+            </div>
+
+            <!-- Step 3: Realisasi -->
+            <div class="card" id="eval-kr-card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="step-num">3</div>
+                <div>
+                  <div class="font-bold text-slate-800">Isi Realisasi</div>
+                  <div class="text-slate-400 text-xs">Masukkan nilai realisasi untuk setiap KR</div>
+                </div>
+              </div>
+              <div id="eval-kr-list">
+                <div class="text-center text-slate-400 py-6 text-sm">Pilih item KPI terlebih dahulu</div>
+              </div>
+            </div>
+
+            <!-- Step 4: Bukti -->
+            <div class="card">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="step-num">4</div>
+                <div>
+                  <div class="font-bold text-slate-800">Bukti & Dokumen</div>
+                  <div class="text-slate-400 text-xs">Upload bukti dan tandatangan</div>
+                </div>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="inp-label">Bukti Utama (JPG/PNG) *</label>
+                  <input type="file" id="eval-bukti" class="inp text-sm" accept=".jpg,.jpeg,.png"/>
+                </div>
+                <div>
+                  <label class="inp-label">Tandatangan (JPG/PNG) *</label>
+                  <input type="file" id="eval-ttd" class="inp text-sm" accept=".jpg,.jpeg,.png"/>
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="inp-label">Keterangan Bukti Utama *</label>
+                <div id="eval-notes" class="rich-editor" contenteditable="true" placeholder="Jelaskan bukti yang dilampirkan..."></div>
+              </div>
+              <!-- Extra Evidence -->
+              <div class="mt-4">
+                <div class="flex items-center justify-between mb-2">
+                  <label class="inp-label mb-0">Bukti Tambahan (opsional)</label>
+                  <button type="button" class="btn btn-ghost btn-xs" onclick="addExtraEvidence()">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah
+                  </button>
+                </div>
+                <div id="eval-extra-evidence" class="space-y-2"></div>
+              </div>
+              <!-- Declaration -->
+              <div class="mt-4 p-3 bg-green-light rounded-xl border border-green/20">
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" id="eval-declare" class="mt-1 accent-green"/>
+                  <span class="text-sm text-slate-700 font-medium">Saya menyatakan bahwa data dan bukti yang saya lampirkan adalah benar dan dapat dipertanggungjawabkan.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Calculate Button -->
+            <button class="btn btn-green w-full py-3 text-base" onclick="doCalculate()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              Hitung Skor KPI
+            </button>
+          </div>
+
+          <!-- RIGHT COLUMN: Info & Preview -->
+          <div class="space-y-4">
+            <div class="card bg-blue text-white" style="background:linear-gradient(135deg,#005EB8,#0080FF)">
+              <div class="text-blue-100 text-xs font-bold uppercase tracking-wider mb-3">Panduan Singkat</div>
+              <div class="space-y-2 text-sm">
+                <div class="flex gap-2"><span class="w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span><span class="text-blue-50">Pilih tahun dan nama karyawan</span></div>
+                <div class="flex gap-2"><span class="w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span><span class="text-blue-50">Pilih item KPI yang akan dievaluasi</span></div>
+                <div class="flex gap-2"><span class="w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">3</span><span class="text-blue-50">Isi nilai realisasi setiap KR</span></div>
+                <div class="flex gap-2"><span class="w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">4</span><span class="text-blue-50">Upload bukti dan tandatangan</span></div>
+                <div class="flex gap-2"><span class="w-5 h-5 rounded-full bg-white/20 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">5</span><span class="text-blue-50">Klik "Hitung Skor KPI"</span></div>
+              </div>
+            </div>
+            <div class="card border-green/30 bg-green-light" id="eval-weight-card" style="display:none">
+              <div class="text-green-dark font-bold text-sm mb-2">Bobot KPI Karyawan Ini</div>
+              <div id="eval-weight-list" class="space-y-1 text-xs text-slate-600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- PAGE: KPI REPORT (Result) -->
+      <!-- ======================================================= -->
+      <div id="page-kpi-report" class="page fade-up">
+        <div class="mb-6 flex items-center gap-3">
+          <button onclick="navigate('kpi-eval')" class="btn btn-ghost btn-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Kembali
+          </button>
+          <div>
+            <h1 class="text-2xl font-black text-slate-900">Hasil Evaluasi KPI</h1>
+            <p class="text-slate-500 text-sm">Skor telah dihitung dan tersimpan</p>
+          </div>
+          <div class="ml-auto flex gap-2">
+            <button class="btn btn-outline btn-sm" onclick="exportReportJPG()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Export JPG
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Export PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Report Area (captured for export) -->
+        <div id="report-area" class="card max-w-3xl mx-auto">
+          <div class="text-center mb-6 pb-4 border-b border-slate-100">
+            <div class="inline-flex items-center gap-2 bg-blue-light text-blue px-4 py-1.5 rounded-full text-xs font-bold mb-3">
+              <div class="w-2 h-2 rounded-full bg-blue pulse-dot"></div>
+              BUKTI PENILAIAN KPI
+            </div>
+            <div class="text-slate-400 text-xs font-medium" id="rpt-generated"></div>
+          </div>
+
+          <!-- Identity -->
+          <div class="grid sm:grid-cols-2 gap-3 mb-4">
+            <div class="bg-slate-50 rounded-xl p-3">
+              <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Nama</div>
+              <div class="font-bold text-slate-800" id="rpt-nama"></div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3">
+              <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Jabatan</div>
+              <div class="font-bold text-slate-800" id="rpt-jabatan"></div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3">
+              <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Item KPI</div>
+              <div class="font-bold text-blue" id="rpt-objective"></div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3">
+              <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Tahun</div>
+              <div class="font-bold text-slate-800" id="rpt-year"></div>
+            </div>
+          </div>
+
+          <!-- Score highlight -->
+          <div class="bg-gradient-to-r from-blue to-blue-mid rounded-2xl p-6 text-white text-center mb-4">
+            <div class="text-blue-100 text-xs font-bold uppercase tracking-widest mb-2">Skor Faktor (SF)</div>
+            <div class="score-display text-white" id="rpt-sf">—</div>
+            <div class="text-blue-100 text-xs mt-2" id="rpt-mode-label"></div>
+          </div>
+
+          <!-- KR Table -->
+          <div class="overflow-x-auto mb-4">
+            <table class="data-table" style="font-size:.8rem">
+              <thead><tr>
+                <th class="text-left">Key Result</th>
+                <th>Target</th>
+                <th>Realisasi</th>
+                <th>Bobot</th>
+                <th>Skor KR</th>
+              </tr></thead>
+              <tbody id="rpt-kr-rows"></tbody>
+              <tfoot>
+                <tr class="bg-blue-light font-bold">
+                  <td colspan="3" class="px-4 py-2 text-blue text-right font-bold">Total</td>
+                  <td class="px-4 py-2 text-blue font-bold text-center" id="rpt-total-bobot"></td>
+                  <td class="px-4 py-2 text-blue font-bold text-center" id="rpt-total-score"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Evidence -->
+          <div class="mb-4">
+            <div class="font-bold text-slate-800 mb-3">Bukti Penilaian</div>
+            <div id="rpt-bukti-main" class="mb-3"></div>
+            <div id="rpt-bukti-extra"></div>
+          </div>
+
+          <!-- Signature row -->
+          <div class="grid sm:grid-cols-2 gap-6 mt-6 pt-4 border-t border-slate-100">
+            <div class="text-center">
+              <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Karyawan</div>
+              <div class="border border-slate-200 rounded-xl p-3 min-h-20 flex items-center justify-center">
+                <img id="rpt-ttd" class="max-h-16 max-w-full object-contain"/>
+              </div>
+              <div class="font-bold text-slate-800 mt-2 text-sm" id="rpt-nama-sign"></div>
+              <div class="text-slate-400 text-xs" id="rpt-jabatan-sign"></div>
+            </div>
+            <div class="text-center">
+              <div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Atasan Langsung</div>
+              <div class="border border-slate-200 rounded-xl p-3 min-h-20 flex items-center justify-center">
+                <div class="text-slate-300 text-xs">TTD</div>
+              </div>
+              <div class="font-bold text-slate-800 mt-2 text-sm" id="rpt-atasan-sign"></div>
+              <div class="text-slate-400 text-xs" id="rpt-jabatan-atasan-sign"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- PAGE: KPI MANAGEMENT -->
+      <!-- ======================================================= -->
+      <div id="page-kpi-mgmt" class="page fade-up">
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900">Manajemen KPI</h1>
+            <p class="text-slate-500 text-sm mt-1">CRUD objektif, KR, bobot, dan tahun KPI</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openYearModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tambah Tahun
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-xl w-fit">
+          <button id="kpi-tab-years" class="btn btn-primary btn-sm" onclick="switchKpiTab('years')">Tahun KPI</button>
+          <button id="kpi-tab-objectives" class="btn btn-ghost btn-sm" onclick="switchKpiTab('objectives')">Objektif &amp; KR</button>
+          <button id="kpi-tab-weights" class="btn btn-ghost btn-sm" onclick="switchKpiTab('weights')">Bobot Karyawan</button>
+        </div>
+
+        <!-- TAB: Years -->
+        <div id="kpi-pane-years">
+          <div class="card overflow-hidden p-0">
+            <div class="p-4 border-b border-slate-100 font-bold text-slate-800">Daftar Tahun KPI</div>
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead><tr><th>Tahun</th><th>Label</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="years-tbody"><tr><td colspan="4" class="text-center text-slate-400 py-8">Memuat...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Objectives -->
+        <div id="kpi-pane-objectives" class="hidden">
+          <div class="flex gap-3 mb-4 items-end flex-wrap">
+            <div class="flex-1 min-w-48">
+              <label class="inp-label">Filter Tahun</label>
+              <select id="obj-year-filter" class="inp" onchange="loadObjectives()">
+                <option value="">— Pilih Tahun —</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openObjectiveModal()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Tambah Objektif
+            </button>
+          </div>
+          <div class="card overflow-hidden p-0">
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead><tr><th>Nama KPI</th><th>Formula</th><th>Mode</th><th>KR</th><th>Aksi</th></tr></thead>
+                <tbody id="objectives-tbody"><tr><td colspan="5" class="text-center text-slate-400 py-8">Pilih tahun terlebih dahulu</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Weights -->
+        <div id="kpi-pane-weights" class="hidden">
+          <div class="flex gap-3 mb-4 items-end flex-wrap">
+            <div class="flex-1 min-w-48">
+              <label class="inp-label">Filter Tahun</label>
+              <select id="wt-year-filter" class="inp" onchange="loadWeights()">
+                <option value="">— Pilih Tahun —</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openWeightModal()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Tambah Bobot
+            </button>
+          </div>
+          <div class="card overflow-hidden p-0">
+            <div class="overflow-x-auto">
+              <table class="data-table">
+                <thead><tr><th>Karyawan</th><th>Item KPI</th><th>Bobot (%)</th><th>Aksi</th></tr></thead>
+                <tbody id="weights-tbody"><tr><td colspan="4" class="text-center text-slate-400 py-8">Pilih tahun terlebih dahulu</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- PAGE: USER MANAGEMENT -->
+      <!-- ======================================================= -->
+      <div id="page-user-mgmt" class="page fade-up">
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900">Manajemen User</h1>
+            <p class="text-slate-500 text-sm mt-1">Kelola akun, role, dan akses modul</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openUserModal()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tambah User
+          </button>
+        </div>
+
+        <!-- Module Access Config -->
+        <div class="card mb-4">
+          <div class="font-bold text-slate-800 mb-3">Konfigurasi Akses Modul per Role</div>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead><tr><th>Modul</th><th>Master Admin</th><th>User</th></tr></thead>
+              <tbody id="module-access-tbody">
+                <tr><td colspan="3" class="text-center text-slate-400 py-6">Memuat...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- User list -->
+        <div class="card overflow-hidden p-0">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="font-bold text-slate-800">Daftar User</div>
+            <input type="text" id="user-search" class="inp w-auto text-sm" placeholder="Cari nama..." oninput="filterUsers()"/>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead><tr><th>Nama</th><th>NIK</th><th>Jabatan</th><th>Role</th><th>Status</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+              <tbody id="user-tbody"><tr><td colspan="7" class="text-center text-slate-400 py-8">Memuat...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- PAGE: GUIDE -->
+      <!-- ======================================================= -->
+      <div id="page-guide" class="page fade-up max-w-3xl">
+        <div class="mb-6">
+          <h1 class="text-2xl font-black text-slate-900">Panduan Penggunaan</h1>
+          <p class="text-slate-500 text-sm mt-1">Cara menggunakan sistem evaluasi KPI</p>
+        </div>
+        <div class="space-y-4">
+          <div class="card">
+            <div class="flex gap-4">
+              <div class="step-num flex-shrink-0">1</div>
+              <div>
+                <div class="font-bold text-slate-800 mb-1">Login ke Sistem</div>
+                <p class="text-slate-600 text-sm">Gunakan email dan password yang diberikan oleh Master Admin. Jika belum punya akun, hubungi administrator.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex gap-4">
+              <div class="step-num flex-shrink-0">2</div>
+              <div>
+                <div class="font-bold text-slate-800 mb-1">Buka Menu Evaluasi KPI</div>
+                <p class="text-slate-600 text-sm">Pilih menu "Evaluasi KPI" di sidebar. Pilih tahun KPI (2026 dst.), lalu pilih nama karyawan yang akan dievaluasi.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex gap-4">
+              <div class="step-num flex-shrink-0">3</div>
+              <div>
+                <div class="font-bold text-slate-800 mb-1">Pilih Item KPI</div>
+                <p class="text-slate-600 text-sm">Dropdown item KPI akan menyesuaikan otomatis berdasarkan bobot yang sudah dikonfigurasi oleh Master Admin untuk karyawan tersebut.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex gap-4">
+              <div class="step-num flex-shrink-0">4</div>
+              <div>
+                <div class="font-bold text-slate-800 mb-1">Isi Realisasi & Bukti</div>
+                <p class="text-slate-600 text-sm">Isi nilai realisasi untuk setiap Key Result. Upload bukti utama (foto/screenshot), tuliskan keterangan, dan upload tandatangan.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex gap-4">
+              <div class="step-num flex-shrink-0">5</div>
+              <div>
+                <div class="font-bold text-slate-800 mb-1">Hitung & Simpan Skor</div>
+                <p class="text-slate-600 text-sm">Klik "Hitung Skor KPI". Sistem menghitung otomatis berdasarkan formula dan mode KPI. Hasil tersimpan ke database dan bisa di-export ke PDF/JPG.</p>
+              </div>
+            </div>
+          </div>
+          <div class="card border-blue/20 bg-blue-light">
+            <div class="font-bold text-blue mb-2">Cara Perhitungan Skor</div>
+            <div class="text-sm text-slate-700 space-y-1">
+              <p><strong>Mode UNCAPPED:</strong> Rasio = Realisasi / Target. Skor KR = Rasio × Bobot. SF: ≥120% → 120, >100% → 110, =100% → 100, ≥80% → 90, &lt;80% → 80.</p>
+              <p><strong>Mode CAP100:</strong> Sama seperti UNCAPPED tapi rasio dibatasi maksimal 100%.</p>
+              <p><strong>Mode SCALE5:</strong> Input skor 0–5. Skor = nilai input × (Bobot/100). Hasilnya tampil sebagai angka 0–5.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- LANDING PAGE -->
+<!-- ============================================================ -->
+<div id="page-landing" class="page active fixed inset-0 flex" style="display:flex!important;background:linear-gradient(135deg,#005EB8 0%,#004a94 40%,#00A651 100%)">
+  <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px),radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px);background-size:60px 60px"></div>
+  <div class="relative z-10 flex flex-col lg:flex-row items-center justify-center w-full max-w-6xl mx-auto p-6 lg:p-12 gap-10">
+    <!-- Hero text -->
+    <div class="flex-1 text-white text-center lg:text-left">
+      <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-xs font-bold mb-6">
+        <div class="w-2 h-2 rounded-full bg-white pulse-dot"></div>
+        Platform Internal · General Affairs
+      </div>
+      <h1 class="text-4xl lg:text-5xl font-black leading-tight mb-4" style="text-shadow:0 4px 20px rgba(0,0,0,.15)">
+        GASSTerus!<br/>
+        <span class="text-green-300">KPI System</span>
+      </h1>
+      <p class="text-blue-100 text-base lg:text-lg max-w-md leading-relaxed">
+        Sistem evaluasi KPI terpusat — hitung skor, simpan bukti, export laporan, semua dalam satu platform.
+      </p>
+      <div class="flex flex-wrap gap-4 mt-6 justify-center lg:justify-start">
+        <div class="flex items-center gap-2 text-blue-100 text-sm"><svg class="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Kalkulasi otomatis</div>
+        <div class="flex items-center gap-2 text-blue-100 text-sm"><svg class="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Export PDF &amp; JPG</div>
+        <div class="flex items-center gap-2 text-blue-100 text-sm"><svg class="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Multi-tahun</div>
+      </div>
+    </div>
+
+    <!-- Login card -->
+    <div class="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-8 flex-shrink-0">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-blue rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h2 class="text-xl font-black text-slate-900">Masuk ke Sistem</h2>
+        <p class="text-slate-500 text-sm mt-1">Gunakan akun yang sudah terdaftar</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="inp-label">Email</label>
+          <input type="email" id="login-email" class="inp" placeholder="nama@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div>
+          <label class="inp-label">Password</label>
+          <input type="password" id="login-password" class="inp" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div id="login-error" class="hidden text-red-500 text-xs font-semibold bg-red-50 rounded-lg p-2"></div>
+        <button id="login-btn" class="btn btn-primary w-full justify-center py-3" onclick="doLogin()">
+          Masuk
+        </button>
+        <button class="btn btn-ghost w-full justify-center text-xs" onclick="showGuideStandalone()">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Lihat Panduan
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="absolute bottom-4 left-0 right-0 text-center text-white/50 text-xs font-medium">
+    © 2026 GASSTerus! KPI System · General Affairs
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODALS -->
+<!-- ============================================================ -->
+
+<!-- Modal: Year -->
+<div id="modal-year" class="modal-backdrop">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-black text-slate-900" id="modal-year-title">Tambah Tahun KPI</h3>
+      <button onclick="closeModal('modal-year')" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+    </div>
+    <div class="space-y-3">
+      <input type="hidden" id="year-id"/>
+      <div><label class="inp-label">Tahun *</label><input type="number" id="year-val" class="inp" placeholder="2027" min="2024" max="2099"/></div>
+      <div><label class="inp-label">Label</label><input type="text" id="year-label" class="inp" placeholder="KPI Tahun 2027"/></div>
+      <div class="flex items-center gap-2">
+        <label class="toggle"><input type="checkbox" id="year-active" checked/><span class="toggle-slider"></span></label>
+        <span class="text-sm font-semibold text-slate-700">Tahun Aktif</span>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button class="btn btn-ghost" onclick="closeModal('modal-year')">Batal</button>
+      <button class="btn btn-primary" onclick="saveYear()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Objective -->
+<div id="modal-objective" class="modal-backdrop">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-black text-slate-900" id="modal-obj-title">Tambah Objektif KPI</h3>
+      <button onclick="closeModal('modal-objective')" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+    </div>
+    <div class="space-y-3">
+      <input type="hidden" id="obj-id"/>
+      <div>
+        <label class="inp-label">Tahun KPI *</label>
+        <select id="obj-year-id" class="inp"></select>
+      </div>
+      <div><label class="inp-label">Nama Objektif / KPI *</label><input type="text" id="obj-nama" class="inp" placeholder="e.g. Tercapainya success rate..."/></div>
+      <div><label class="inp-label">Formula / Deskripsi</label><textarea id="obj-formula" class="inp" rows="2" placeholder="Rumus / cara perhitungan..."></textarea></div>
+      <div>
+        <label class="inp-label">Mode Perhitungan *</label>
+        <select id="obj-mode" class="inp">
+          <option value="UNCAPPED">UNCAPPED (rasio bebas, SF 80/90/100/110/120)</option>
+          <option value="CAP100">CAP100 (rasio maks 100%, SF 80/90/100)</option>
+          <option value="SCALE5">SCALE5 (input skor 0–5)</option>
+        </select>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="inp-label mb-0">Key Results *</label>
+          <button type="button" class="btn btn-ghost btn-xs" onclick="addKrRow()">+ Tambah KR</button>
+        </div>
+        <div id="kr-rows-container" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button class="btn btn-ghost" onclick="closeModal('modal-objective')">Batal</button>
+      <button class="btn btn-primary" onclick="saveObjective()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Weight -->
+<div id="modal-weight" class="modal-backdrop">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-black text-slate-900" id="modal-wt-title">Tambah Bobot Karyawan</h3>
+      <button onclick="closeModal('modal-weight')" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+    </div>
+    <div class="space-y-3">
+      <input type="hidden" id="wt-id"/>
+      <div><label class="inp-label">Tahun KPI *</label><select id="wt-year-id" class="inp" onchange="loadObjForWeight()"></select></div>
+      <div><label class="inp-label">Nama Karyawan *</label><input type="text" id="wt-employee" class="inp" placeholder="Nama lengkap karyawan"/></div>
+      <div><label class="inp-label">Objektif KPI *</label><select id="wt-objective-id" class="inp"></select></div>
+      <div><label class="inp-label">Bobot (%) *</label><input type="number" id="wt-weight" class="inp" placeholder="0–100" min="0" max="100" step="0.5"/></div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button class="btn btn-ghost" onclick="closeModal('modal-weight')">Batal</button>
+      <button class="btn btn-primary" onclick="saveWeight()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: User -->
+<div id="modal-user" class="modal-backdrop">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-black text-slate-900" id="modal-user-title">Tambah User</h3>
+      <button onclick="closeModal('modal-user')" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+    </div>
+    <div class="space-y-3">
+      <input type="hidden" id="user-id"/>
+      <div><label class="inp-label">Nama Lengkap *</label><input type="text" id="user-nama" class="inp" placeholder="Nama karyawan"/></div>
+      <div><label class="inp-label">NIK</label><input type="text" id="user-nik" class="inp" placeholder="NIK karyawan"/></div>
+      <div><label class="inp-label">Jabatan</label><input type="text" id="user-jabatan" class="inp" placeholder="Jabatan"/></div>
+      <div id="user-email-row">
+        <label class="inp-label">Email *</label>
+        <input type="email" id="user-email" class="inp" placeholder="email@domain.com"/>
+      </div>
+      <div id="user-pass-row">
+        <label class="inp-label">Password *</label>
+        <input type="password" id="user-password" class="inp" placeholder="Min. 8 karakter"/>
+      </div>
+      <div>
+        <label class="inp-label">Role *</label>
+        <select id="user-role" class="inp">
+          <option value="user">User</option>
+          <option value="master_admin">Master Admin</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="toggle"><input type="checkbox" id="user-active" checked/><span class="toggle-slider"></span></label>
+        <span class="text-sm font-semibold text-slate-700">Akun Aktif</span>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Batal</button>
+      <button class="btn btn-primary" onclick="saveUser()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: KR Detail -->
+<div id="modal-kr" class="modal-backdrop">
+  <div class="modal-box p-6 max-w-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-black text-slate-900" id="modal-kr-title">Key Results</h3>
+      <button onclick="closeModal('modal-kr')" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400">✕</button>
+    </div>
+    <div id="modal-kr-content" class="overflow-x-auto">
+      <table class="data-table"><thead><tr><th>#</th><th>Key Result</th><th>Target</th><th>Unit</th><th>Bobot</th></tr></thead><tbody id="modal-kr-tbody"></tbody></table>
+    </div>
+    <div class="flex justify-end mt-4">
+      <button class="btn btn-ghost" onclick="closeModal('modal-kr')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================================ -->
+<script>
+// ================================================================
+// CONFIG — Replace with your Supabase credentials
+// ================================================================
+const SUPABASE_CONFIG = {
+  url: "https://sjrygjqmrwophdnlwhqf.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcnlnanFtcndvcGhkbmx3aHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzk0OTIsImV4cCI6MjA4OTkxNTQ5Mn0.x213qcZyRFUt30VPwR2vxAoReD31BKJeSBey-j09AKs"
+};
+
+// ================================================================
+// BYPASS MODE — access with ?bypass=cpanel
+// ================================================================
+const BYPASS = new URLSearchParams(location.search).get('bypass') === 'cpanel';
+
+// ================================================================
+// SUPABASE CLIENT
+// ================================================================
+let sb = null;
+if (!BYPASS && SUPABASE_CONFIG.url !== "https://sjrygjqmrwophdnlwhqf.supabase.co") {
+  sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+}
+
+// ================================================================
+// APP STATE
+// ================================================================
+const App = {
+  user: null,
+  profile: null,
+  isAdmin: false,
+  currentPage: 'landing',
+  evalData: null,        // current evaluation in-progress
+  allEvaluations: [],
+  allUsers: [],
+  allYears: [],
+  allObjectives: [],
+  allWeights: []
+};
+
+// ================================================================
+// TOAST
+// ================================================================
+function toast(msg, type='info') {
+  const icons = {success:'✅', error:'❌', info:'ℹ️'};
+  const div = document.createElement('div');
+  div.className = `toast-item toast-${type}`;
+  div.innerHTML = `<span>${icons[type]||'•'}</span><span>${msg}</span>`;
+  document.getElementById('toast').appendChild(div);
+  setTimeout(()=>div.remove(), 3500);
+}
+
+// ================================================================
+// SIDEBAR
+// ================================================================
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.remove('hidden');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.add('hidden');
+}
+
+// ================================================================
+// NAVIGATION / ROUTER
+// ================================================================
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', 'kpi-eval': 'Evaluasi KPI',
+  'kpi-report': 'Hasil KPI', 'kpi-mgmt': 'Manajemen KPI',
+  'user-mgmt': 'Manajemen User', guide: 'Panduan'
+};
+
+function navigate(page) {
+  // For guide page, show without auth requirement
+  if (page === 'guide') { showPage(page); return; }
+  if (!App.user && !BYPASS) { showLanding(); return; }
+  showPage(page);
+  // Load data for page
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'kpi-eval') initEvalPage();
+  else if (page === 'kpi-mgmt') initKpiMgmt();
+  else if (page === 'user-mgmt') initUserMgmt();
+}
+
+function showPage(page) {
+  // Hide landing
+  const landing = document.getElementById('page-landing');
+  landing.classList.remove('active');
+
+  // Show/hide app shell
+  const shell = document.getElementById('app-shell');
+  if (page === 'landing') {
+    shell.style.display = 'none';
+    landing.classList.add('active');
+    return;
+  }
+  shell.style.removeProperty('display');
+
+  // Show correct page
+  document.querySelectorAll('#app-shell .page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(`page-${page}`);
+  if (el) el.classList.add('active');
+
+  // Update topbar
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
+
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${page}`);
+  if (navEl) navEl.classList.add('active');
+
+  App.currentPage = page;
+  closeSidebar();
+}
+
+function showLanding() {
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('page-landing').classList.add('active');
+}
+
+// ================================================================
+// AUTH
+// ================================================================
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  errEl.classList.add('hidden');
+
+  if (!email || !password) { showLoginError('Email dan password wajib diisi.'); return; }
+
+  if (!sb) { showLoginError('Supabase belum dikonfigurasi. Gunakan ?bypass=cpanel untuk preview.'); return; }
+
+  btn.textContent = 'Memproses...';
+  btn.disabled = true;
+
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    App.user = data.user;
+    await loadProfile();
+    enterApp();
+  } catch(err) {
+    showLoginError(err.message || 'Login gagal.');
+  } finally {
+    btn.textContent = 'Masuk';
+    btn.disabled = false;
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+async function loadProfile() {
+  if (!sb || !App.user) return;
+  try {
+    const { data } = await sb.from('profiles').select('*').eq('id', App.user.id).single();
+    App.profile = data;
+    App.isAdmin = data?.role === 'master_admin';
+  } catch(e) {}
+}
+
+async function doLogout() {
+  if (sb) await sb.auth.signOut();
+  App.user = null; App.profile = null; App.isAdmin = false;
+  if (BYPASS) { location.href = location.pathname; return; }
+  showLanding();
+}
+
+function enterApp() {
+  // Update sidebar info
+  const name = App.profile?.nama || App.user?.email || 'User';
+  document.getElementById('sidebar-name').textContent = name;
+  document.getElementById('sidebar-role').textContent = App.isAdmin ? 'Master Admin' : 'User';
+  document.getElementById('sidebar-avatar').textContent = name[0].toUpperCase();
+
+  // Show/hide admin nav items
+  if (App.isAdmin) {
+    document.getElementById('nav-kpi-mgmt').classList.remove('hidden');
+    document.getElementById('nav-user-mgmt').classList.remove('hidden');
+  }
+
+  navigate('dashboard');
+}
+
+// ================================================================
+// INIT — check session
+// ================================================================
+async function initApp() {
+  if (BYPASS) {
+    document.getElementById('bypass-banner').classList.add('show');
+    App.user = { id: 'bypass', email: 'bypass@demo.com' };
+    App.profile = { nama: 'Demo Admin', role: 'master_admin', nik:'000', jabatan:'Preview Mode' };
+    App.isAdmin = true;
+    enterApp();
+    return;
+  }
+
+  if (!sb) {
+    showLanding();
+    return;
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    App.user = session.user;
+    await loadProfile();
+    enterApp();
+  } else {
+    showLanding();
+  }
+}
+
+// ================================================================
+// DASHBOARD
+// ================================================================
+async function loadDashboard() {
+  document.getElementById('dash-tbody').innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-8">Memuat data...</td></tr>';
+  try {
+    let evals = [];
+    if (sb && !BYPASS) {
+      let q = sb.from('kpi_evaluations').select('*').order('created_at', {ascending:false});
+      const { data, error } = await q;
+      if (error) throw error;
+      evals = data || [];
+    } else {
+      evals = App.allEvaluations || [];
+    }
+    App.allEvaluations = evals;
+    updateDashboardStats(evals);
+    renderDashboardTable(evals);
+    populateDashYearFilter(evals);
+  } catch(err) {
+    document.getElementById('dash-tbody').innerHTML = `<tr><td colspan="8" class="text-center text-red-400 py-6">${err.message}</td></tr>`;
+  }
+}
+
+function updateDashboardStats(evals) {
+  const now = new Date();
+  const thisMonth = evals.filter(e => {
+    const d = new Date(e.created_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const sfVals = evals.filter(e=>e.sf_score).map(e=>parseFloat(e.sf_score));
+  const avgSf = sfVals.length ? (sfVals.reduce((a,b)=>a+b,0)/sfVals.length).toFixed(1) : '—';
+  const uniqueEval = new Set(evals.map(e=>e.evaluator_name)).size;
+
+  document.getElementById('stat-total').textContent = evals.length;
+  document.getElementById('stat-month').textContent = thisMonth.length;
+  document.getElementById('stat-avg-sf').textContent = avgSf;
+  document.getElementById('stat-evaluators').textContent = uniqueEval;
+}
+
+function populateDashYearFilter(evals) {
+  const sel = document.getElementById('dash-year-filter');
+  const current = sel.value;
+  const years = [...new Set(evals.map(e=>e.year_label).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Semua Tahun</option>' + years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  sel.value = current;
+}
+
+function filterDashboard() {
+  const q = document.getElementById('dash-search').value.toLowerCase();
+  const yr = document.getElementById('dash-year-filter').value;
+  const filtered = App.allEvaluations.filter(e => {
+    const matchQ = !q || (e.employee_name||'').toLowerCase().includes(q) || (e.objective_name||'').toLowerCase().includes(q);
+    const matchY = !yr || e.year_label === yr;
+    return matchQ && matchY;
+  });
+  renderDashboardTable(filtered);
+}
+
+function renderDashboardTable(evals) {
+  document.getElementById('dash-count').textContent = evals.length + ' data';
+  if (!evals.length) {
+    document.getElementById('dash-tbody').innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-8">Belum ada data evaluasi</td></tr>';
+    return;
+  }
+  document.getElementById('dash-tbody').innerHTML = evals.map(e => {
+    const sf = e.sf_score;
+    const sfColor = sf >= 100 ? 'text-green font-bold' : sf >= 90 ? 'text-blue font-bold' : 'text-orange-500 font-bold';
+    const dt = new Date(e.created_at).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td class="text-slate-400 text-xs whitespace-nowrap">${dt}</td>
+      <td class="font-medium">${e.evaluator_name||'—'}</td>
+      <td class="font-semibold">${e.employee_name||'—'}</td>
+      <td class="text-slate-600 max-w-48 truncate">${e.objective_name||'—'}</td>
+      <td><span class="badge bg-blue-light text-blue">${e.year_label||'—'}</span></td>
+      <td class="text-center">${e.total_score!=null?parseFloat(e.total_score).toFixed(2):'—'}</td>
+      <td class="text-center ${sfColor}">${sf||'—'}</td>
+      <td>
+        <button onclick="deleteEvaluation('${e.id}')" class="btn btn-xs btn-danger">Hapus</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function deleteEvaluation(id) {
+  if (!confirm('Hapus data evaluasi ini?')) return;
+  if (BYPASS) { App.allEvaluations = App.allEvaluations.filter(e=>e.id!==id); loadDashboard(); return; }
+  const { error } = await sb.from('kpi_evaluations').delete().eq('id', id);
+  if (error) { toast('Gagal menghapus: '+error.message, 'error'); return; }
+  toast('Data dihapus', 'success');
+  loadDashboard();
+}
+
+// ================================================================
+// KPI EVALUATION PAGE
+// ================================================================
+async function initEvalPage() {
+  await loadYearsForEval();
+}
+
+async function loadYearsForEval() {
+  const sel = document.getElementById('eval-year');
+  sel.innerHTML = '<option value="">— Pilih Tahun —</option>';
+  if (BYPASS) {
+    App.allYears.forEach(y => sel.add(new Option(y.label||y.year, y.id)));
+    return;
+  }
+  try {
+    const { data } = await sb.from('kpi_years').select('*').eq('is_active', true).order('year', {ascending:false});
+    App.allYears = data || [];
+    data.forEach(y => sel.add(new Option(y.label||`KPI ${y.year}`, y.id)));
+  } catch(e) {}
+}
+
+async function onEvalYearChange() {
+  const yearId = document.getElementById('eval-year').value;
+  const nameSel = document.getElementById('eval-name');
+  nameSel.innerHTML = '<option value="">— Pilih Nama —</option>';
+  nameSel.disabled = true;
+  document.getElementById('eval-objective').innerHTML = '<option value="">— Pilih Item KPI —</option>';
+  document.getElementById('eval-objective').disabled = true;
+  document.getElementById('eval-kr-list').innerHTML = '<div class="text-center text-slate-400 py-6 text-sm">Pilih nama karyawan terlebih dahulu</div>';
+  if (!yearId) return;
+
+  // Load employee weights for this year
+  try {
+    let weights = [];
+    if (!BYPASS && sb) {
+      const { data } = await sb.from('employee_kpi_weights').select('employee_name').eq('year_id', yearId);
+      weights = data || [];
+    } else {
+      weights = App.allWeights.filter(w=>w.year_id===yearId);
+    }
+    const names = [...new Set(weights.map(w=>w.employee_name))].sort();
+    names.forEach(n => nameSel.add(new Option(n, n)));
+    nameSel.disabled = false;
+  } catch(e) { toast('Gagal memuat daftar karyawan', 'error'); }
+}
+
+async function onEvalNameChange() {
+  const yearId = document.getElementById('eval-year').value;
+  const empName = document.getElementById('eval-name').value;
+  const objSel = document.getElementById('eval-objective');
+  objSel.innerHTML = '<option value="">— Pilih Item KPI —</option>';
+  objSel.disabled = true;
+  document.getElementById('eval-kr-list').innerHTML = '<div class="text-center text-slate-400 py-6 text-sm">Pilih item KPI terlebih dahulu</div>';
+  document.getElementById('eval-weight-card').style.display = 'none';
+  if (!empName || !yearId) return;
+
+  // Load objectives for this employee & year
+  try {
+    let objList = [];
+    if (!BYPASS && sb) {
+      const { data: wts } = await sb.from('employee_kpi_weights').select('*, kpi_objectives(id,nama)').eq('year_id',yearId).eq('employee_name',empName);
+      objList = (wts||[]).map(w=>({id:w.objective_id, nama:w.kpi_objectives?.nama, weight:w.weight}));
+    } else {
+      objList = App.allWeights.filter(w=>w.year_id===yearId && w.employee_name===empName)
+        .map(w=>({id:w.objective_id, nama:App.allObjectives.find(o=>o.id===w.objective_id)?.nama, weight:w.weight}));
+    }
+    objList.forEach(o => objSel.add(new Option(o.nama, o.id)));
+    objSel.disabled = false;
+
+    // Show weight summary
+    const wHtml = objList.map(o=>`<div class="flex justify-between"><span>${o.nama}</span><span class="font-bold text-green">${o.weight}%</span></div>`).join('');
+    document.getElementById('eval-weight-list').innerHTML = wHtml;
+    document.getElementById('eval-weight-card').style.display = 'block';
+  } catch(e) { toast('Gagal memuat KPI karyawan', 'error'); }
+}
+
+async function onEvalObjectiveChange() {
+  const objId = document.getElementById('eval-objective').value;
+  document.getElementById('eval-formula-box').classList.add('hidden');
+  document.getElementById('eval-kr-list').innerHTML = '<div class="text-center text-slate-400 py-6 text-sm">Memuat...</div>';
+  if (!objId) { document.getElementById('eval-kr-list').innerHTML = '<div class="text-center text-slate-400 py-6 text-sm">Pilih item KPI terlebih dahulu</div>'; return; }
+
+  try {
+    let obj = null;
+    let krs = [];
+    if (!BYPASS && sb) {
+      const { data: objData } = await sb.from('kpi_objectives').select('*').eq('id', objId).single();
+      obj = objData;
+      const { data: krData } = await sb.from('kpi_key_results').select('*').eq('objective_id', objId).order('sort_order');
+      krs = krData || [];
+    } else {
+      obj = App.allObjectives.find(o=>o.id===objId);
+      krs = (obj?.kpi_key_results) || [];
+    }
+
+    if (obj?.formula) {
+      document.getElementById('eval-formula-text').textContent = '📌 ' + obj.formula;
+      document.getElementById('eval-formula-box').classList.remove('hidden');
+    }
+
+    // Store for calculation
+    App.evalData = { obj, krs };
+    renderKrInputs(obj, krs);
+  } catch(e) { toast('Gagal memuat KR', 'error'); }
+}
+
+function renderKrInputs(obj, krs) {
+  if (!krs.length) { document.getElementById('eval-kr-list').innerHTML = '<div class="text-center text-slate-400 py-4 text-sm">Tidak ada KR untuk item ini</div>'; return; }
+  const mode = obj.mode || 'UNCAPPED';
+  const html = krs.map((kr, i) => `
+    <div class="flex gap-3 items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+      <div class="w-6 h-6 rounded-full bg-blue-light text-blue text-xs font-bold flex items-center justify-center flex-shrink-0">${i+1}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold text-slate-700 leading-tight">${kr.kr_text}</div>
+        <div class="text-xs text-slate-400 mt-0.5">Target: <b>${kr.target} ${kr.unit||''}</b> · Bobot: <b>${kr.relative_weight}%</b></div>
+      </div>
+      <div class="flex-shrink-0 w-28">
+        <input type="number" class="inp text-center eval-kr-inp" style="padding:8px 4px"
+          data-target="${kr.target}" data-weight="${kr.relative_weight}" data-unit="${kr.unit||''}"
+          placeholder="${mode==='SCALE5'?'0–5':'Realisasi'}"
+          ${mode==='SCALE5'?'min="0" max="5" step="0.1"':'step="any"'}/>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('eval-kr-list').innerHTML = html;
+}
+
+let extraEvidenceCount = 0;
+function addExtraEvidence() {
+  extraEvidenceCount++;
+  const div = document.createElement('div');
+  div.className = 'p-3 border border-slate-200 rounded-xl bg-slate-50 space-y-2';
+  div.innerHTML = `
+    <div class="flex items-center justify-between">
+      <div class="text-xs font-bold text-slate-600">Bukti Tambahan ${extraEvidenceCount}</div>
+      <button type="button" class="btn btn-danger btn-xs" onclick="this.closest('.p-3').remove()">Hapus</button>
+    </div>
+    <input type="file" class="inp text-xs extra-evidence-file" accept=".jpg,.jpeg,.png"/>
+    <div class="rich-editor extra-evidence-note text-sm" contenteditable="true" placeholder="Keterangan bukti..."></div>
+  `;
+  document.getElementById('eval-extra-evidence').appendChild(div);
+}
+
+function resetEvalForm() {
+  document.getElementById('eval-year').value = '';
+  document.getElementById('eval-name').innerHTML = '<option value="">— Pilih Nama —</option>';
+  document.getElementById('eval-name').disabled = true;
+  document.getElementById('eval-objective').innerHTML = '<option value="">— Pilih Item KPI —</option>';
+  document.getElementById('eval-objective').disabled = true;
+  document.getElementById('eval-kr-list').innerHTML = '<div class="text-center text-slate-400 py-6 text-sm">Pilih item KPI terlebih dahulu</div>';
+  document.getElementById('eval-bukti').value = '';
+  document.getElementById('eval-ttd').value = '';
+  document.getElementById('eval-notes').innerHTML = '';
+  document.getElementById('eval-extra-evidence').innerHTML = '';
+  document.getElementById('eval-declare').checked = false;
+  document.getElementById('eval-nik').value = '';
+  document.getElementById('eval-jabatan').value = '';
+  document.getElementById('eval-atasan').value = '';
+  document.getElementById('eval-jabatan-atasan').value = '';
+  document.getElementById('eval-formula-box').classList.add('hidden');
+  document.getElementById('eval-weight-card').style.display = 'none';
+  App.evalData = null;
+  extraEvidenceCount = 0;
+}
+
+// ================================================================
+// KPI CALCULATION ENGINE (same logic as original)
+// ================================================================
+const KPI_MODE_RULES = {
+  SCALE5: new Set(),   // populated from DB (mode field)
+  CAP100: new Set()
+};
+
+function getKpiModeFromObj(obj) { return obj?.mode || 'UNCAPPED'; }
+
+function computeSf(finalRatio) {
+  const r = Math.round(finalRatio * 10000) / 10000;
+  if (r >= 1.2) return 120;
+  if (r > 1.0)  return 110;
+  if (r >= 1.0) return 100;
+  if (r >= 0.8) return 90;
+  return 80;
+}
+
+async function doCalculate() {
+  if (!document.getElementById('eval-declare').checked) { toast('Wajib centang pernyataan!', 'error'); return; }
+  const ttdFile = document.getElementById('eval-ttd').files[0];
+  const buktiFile = document.getElementById('eval-bukti').files[0];
+  if (!ttdFile) { toast('Wajib upload TTD!', 'error'); return; }
+  if (!buktiFile) { toast('Wajib upload bukti utama!', 'error'); return; }
+  const notesText = document.getElementById('eval-notes').innerText.trim();
+  if (!notesText) { toast('Keterangan bukti utama wajib diisi!', 'error'); return; }
+
+  const empName = document.getElementById('eval-name').value;
+  const yearId = document.getElementById('eval-year').value;
+  const objId = document.getElementById('eval-objective').value;
+  if (!empName || !objId || !yearId) { toast('Lengkapi semua field terlebih dahulu!', 'error'); return; }
+
+  const inputs = document.querySelectorAll('.eval-kr-inp');
+  if (!inputs.length) { toast('Pilih item KPI terlebih dahulu!', 'error'); return; }
+  for (const inp of inputs) {
+    if (inp.value === '') { toast('Isi semua nilai realisasi!', 'error'); return; }
+  }
+
+  const obj = App.evalData?.obj;
+  const krs = App.evalData?.krs || [];
+  const mode = getKpiModeFromObj(obj);
+
+  let sumScore = 0, totalBobot = 0;
+  const realisasi = [];
+  const krRows = [];
+
+  inputs.forEach((inp, idx) => {
+    const target = parseFloat(inp.dataset.target);
+    const weightKR = parseFloat(inp.dataset.weight);
+    const real = parseFloat(inp.value);
+    const kr = krs[idx] || {};
+    const unit = inp.dataset.unit || '';
+    let scorePart = 0;
+
+    if (!isFinite(weightKR)) { scorePart = 0; }
+    else if (mode === 'SCALE5') {
+      const r = isFinite(real) ? Math.max(0, Math.min(real, 5)) : 0;
+      scorePart = r * (weightKR / 100);
+    } else {
+      if (!isFinite(target)) { scorePart = 0; }
+      else if (target === 0) { scorePart = (real === 0) ? weightKR : 0; }
+      else {
+        let ratio = isFinite(real) ? (real / target) : 0;
+        if (mode === 'CAP100') ratio = Math.min(ratio, 1);
+        scorePart = ratio * weightKR;
+      }
+    }
+    sumScore += scorePart;
+    totalBobot += (isFinite(weightKR) ? weightKR : 0);
+    realisasi.push({ kr_id: kr.id, kr_text: kr.kr_text, target, unit, weight: weightKR, real, score: scorePart });
+    krRows.push({ kr_text: kr.kr_text||`KR ${idx+1}`, target, unit, real, weight: weightKR, score: scorePart });
+  });
+
+  // Normalize if totalBobot != 100
+  if (totalBobot > 0 && Math.abs(totalBobot - 100) > 0.0001) {
+    sumScore = (sumScore / totalBobot) * 100;
+    totalBobot = 100;
+  }
+
+  let finalSf = 0;
+  if (mode === 'SCALE5') { finalSf = sumScore; }
+  else { finalSf = computeSf(sumScore / 100); }
+
+  // Read extra evidence
+  const extraFiles = document.querySelectorAll('.extra-evidence-file');
+  const extraNotes = document.querySelectorAll('.extra-evidence-note');
+  const extraEv = [];
+  for (let i = 0; i < extraFiles.length; i++) {
+    const f = extraFiles[i].files[0];
+    const n = extraNotes[i]?.innerText.trim() || '';
+    if (f) extraEv.push({ fileName: f.name, note: n, url: URL.createObjectURL(f) });
+  }
+
+  // Get year label
+  const yearSel = document.getElementById('eval-year');
+  const yearLabel = yearSel.options[yearSel.selectedIndex]?.text || '';
+
+  // Convert images to base64 for storage + report
+  const ttdUrl = URL.createObjectURL(ttdFile);
+  const buktiUrl = URL.createObjectURL(buktiFile);
+  const buktiBase64 = await fileToBase64(buktiFile);
+  const ttdBase64 = await fileToBase64(ttdFile);
+
+  const evalRecord = {
+    id: 'local_' + Date.now(),
+    evaluator_id: App.user?.id,
+    evaluator_name: App.profile?.nama || App.user?.email,
+    year_id: yearId,
+    year_label: yearLabel,
+    objective_id: objId,
+    objective_name: obj?.nama || '',
+    employee_name: empName,
+    jabatan: document.getElementById('eval-jabatan').value || '',
+    nama_atasan: document.getElementById('eval-atasan').value || '',
+    jabatan_atasan: document.getElementById('eval-jabatan-atasan').value || '',
+    mode,
+    realisasi,
+    total_bobot: totalBobot,
+    total_score: sumScore,
+    sf_score: finalSf,
+    notes: notesText,
+    bukti_base64: buktiBase64,
+    ttd_base64: ttdBase64,
+    extra_evidence: extraEv,
+    created_at: new Date().toISOString()
+  };
+
+  // Save to DB
+  if (sb && !BYPASS) {
+    try {
+      const { data, error } = await sb.from('kpi_evaluations').insert([{
+        evaluator_id: evalRecord.evaluator_id,
+        evaluator_name: evalRecord.evaluator_name,
+        year_id: yearId, year_label: yearLabel,
+        objective_id: objId, objective_name: evalRecord.objective_name,
+        employee_name: empName, jabatan: evalRecord.jabatan,
+        nama_atasan: evalRecord.nama_atasan,
+        jabatan_atasan: evalRecord.jabatan_atasan,
+        mode, realisasi: JSON.stringify(realisasi),
+        total_bobot: totalBobot, total_score: sumScore, sf_score: finalSf,
+        notes: notesText, status: 'submitted'
+      }]).select().single();
+      if (error) throw error;
+      evalRecord.id = data.id;
+      toast('Evaluasi tersimpan ke database!', 'success');
+    } catch(err) {
+      toast('Gagal simpan ke DB: ' + err.message, 'error');
+    }
+  } else {
+    App.allEvaluations.unshift(evalRecord);
+    toast('Evaluasi tersimpan (mode bypass)', 'info');
+  }
+
+  // Render report
+  renderReport({ evalRecord, krRows, mode, sumScore, totalBobot, finalSf, buktiUrl, ttdUrl, extraEv });
+  navigate('kpi-report');
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// ================================================================
+// REPORT RENDER
+// ================================================================
+function renderReport({ evalRecord, krRows, mode, sumScore, totalBobot, finalSf, buktiUrl, ttdUrl, extraEv }) {
+  const now = new Date().toLocaleString('id-ID', {dateStyle:'long', timeStyle:'short'});
+  document.getElementById('rpt-generated').textContent = 'Digenerate: ' + now;
+  document.getElementById('rpt-nama').textContent = evalRecord.employee_name;
+  document.getElementById('rpt-jabatan').textContent = evalRecord.jabatan || '—';
+  document.getElementById('rpt-objective').textContent = evalRecord.objective_name;
+  document.getElementById('rpt-year').textContent = evalRecord.year_label;
+  document.getElementById('rpt-nama-sign').textContent = evalRecord.employee_name;
+  document.getElementById('rpt-jabatan-sign').textContent = evalRecord.jabatan || '—';
+  document.getElementById('rpt-atasan-sign').textContent = evalRecord.nama_atasan || '—';
+  document.getElementById('rpt-jabatan-atasan-sign').textContent = evalRecord.jabatan_atasan || '—';
+  document.getElementById('rpt-mode-label').textContent = mode === 'SCALE5' ? 'Skala 0–5' : `Skor Total: ${sumScore.toFixed(2)} dari 100`;
+
+  const sfEl = document.getElementById('rpt-sf');
+  sfEl.textContent = mode === 'SCALE5' ? finalSf.toFixed(2) : String(finalSf);
+  sfEl.className = 'score-display ' + (finalSf >= 100 || (mode==='SCALE5' && finalSf>=4) ? 'score-good' : finalSf>=90 || (mode==='SCALE5'&&finalSf>=3) ? '' : 'score-low');
+
+  document.getElementById('rpt-kr-rows').innerHTML = krRows.map(r=>`
+    <tr>
+      <td class="text-left">${r.kr_text}</td>
+      <td class="text-center">${r.target} ${r.unit||''}</td>
+      <td class="text-center">${r.real}</td>
+      <td class="text-center">${r.weight}%</td>
+      <td class="text-center font-bold text-blue">${r.score.toFixed(2)}</td>
+    </tr>`).join('');
+  document.getElementById('rpt-total-bobot').textContent = totalBobot + '%';
+  document.getElementById('rpt-total-score').textContent = sumScore.toFixed(2);
+  document.getElementById('rpt-ttd').src = ttdUrl;
+  document.getElementById('rpt-bukti-main').innerHTML = `
+    <div class="text-xs text-slate-500 font-semibold mb-1">Keterangan: ${evalRecord.notes}</div>
+    <img src="${buktiUrl}" class="max-h-80 w-full object-contain rounded-xl border border-slate-200 bg-slate-50"/>`;
+  document.getElementById('rpt-bukti-extra').innerHTML = extraEv.map((ev,i)=>`
+    <div class="mb-3">
+      <div class="text-xs text-slate-500 font-semibold mb-1">Bukti Tambahan ${i+1}: ${ev.note||''}</div>
+      <img src="${ev.url}" class="max-h-60 w-full object-contain rounded-xl border border-slate-200 bg-slate-50"/>
+    </div>`).join('');
+}
+
+// ================================================================
+// EXPORT
+// ================================================================
+async function exportReportPDF() {
+  const el = document.getElementById('report-area');
+  const btn = event.currentTarget;
+  btn.textContent = 'Exporting...'; btn.disabled = true;
+  try {
+    const canvas = await html2canvas(el, { scale:2, backgroundColor:'#ffffff', useCORS:true });
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const pW = pdf.internal.pageSize.getWidth();
+    const pH = pdf.internal.pageSize.getHeight();
+    const imgW = canvas.width, imgH = canvas.height;
+    const ratio = pW / imgW;
+    const scaledH = imgH * ratio;
+    if (scaledH <= pH) {
+      pdf.addImage(imgData,'JPEG',0,0,pW,scaledH);
+    } else {
+      let y = 0;
+      while (y < imgH) {
+        const sliceH = Math.min(pH / ratio, imgH - y);
+        const c2 = document.createElement('canvas');
+        c2.width = imgW; c2.height = sliceH;
+        c2.getContext('2d').drawImage(canvas, 0, y, imgW, sliceH, 0, 0, imgW, sliceH);
+        if (y > 0) pdf.addPage();
+        pdf.addImage(c2.toDataURL('image/jpeg',0.95),'JPEG',0,0,pW,sliceH*ratio);
+        y += sliceH;
+      }
+    }
+    pdf.save(`KPI_${document.getElementById('rpt-nama').textContent}_${Date.now()}.pdf`);
+    toast('PDF berhasil diexport!', 'success');
+  } catch(e) { toast('Export PDF gagal: '+e.message, 'error'); }
+  finally { btn.textContent = 'Export PDF'; btn.disabled = false; }
+}
+
+async function exportReportJPG() {
+  const el = document.getElementById('report-area');
+  const btn = event.currentTarget;
+  btn.textContent = 'Exporting...'; btn.disabled = true;
+  try {
+    const canvas = await html2canvas(el, { scale:2, backgroundColor:'#ffffff', useCORS:true });
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/jpeg', 0.95);
+    a.download = `KPI_${document.getElementById('rpt-nama').textContent}_${Date.now()}.jpg`;
+    a.click();
+    toast('JPG berhasil diexport!', 'success');
+  } catch(e) { toast('Export JPG gagal: '+e.message, 'error'); }
+  finally { btn.textContent = 'Export JPG'; btn.disabled = false; }
+}
+
+// ================================================================
+// KPI MANAGEMENT
+// ================================================================
+async function initKpiMgmt() {
+  await loadYearsForMgmt();
+  switchKpiTab('years');
+}
+
+async function loadYearsForMgmt() {
+  if (sb && !BYPASS) {
+    const { data } = await sb.from('kpi_years').select('*').order('year', {ascending:false});
+    App.allYears = data || [];
+  }
+  renderYearsTable();
+  populateYearSelects();
+}
+
+function populateYearSelects() {
+  const selects = ['obj-year-filter','obj-year-id','wt-year-filter','wt-year-id','dash-year-filter'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Pilih Tahun —</option>';
+    App.allYears.forEach(y => sel.add(new Option(y.label||`KPI ${y.year}`, y.id)));
+    sel.value = cur;
+  });
+}
+
+function renderYearsTable() {
+  const tbody = document.getElementById('years-tbody');
+  if (!App.allYears.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-8">Belum ada tahun KPI</td></tr>'; return; }
+  tbody.innerHTML = App.allYears.map(y=>`<tr>
+    <td class="font-bold">${y.year}</td>
+    <td>${y.label||'—'}</td>
+    <td><span class="badge ${y.is_active?'bg-green-light text-green':'bg-slate-100 text-slate-500'}">${y.is_active?'Aktif':'Nonaktif'}</span></td>
+    <td class="flex gap-1">
+      <button onclick="openYearModal('${y.id}')" class="btn btn-outline btn-xs">Edit</button>
+      <button onclick="deleteYear('${y.id}')" class="btn btn-danger btn-xs">Hapus</button>
+    </td>
+  </tr>`).join('');
+}
+
+function switchKpiTab(tab) {
+  ['years','objectives','weights'].forEach(t => {
+    document.getElementById(`kpi-pane-${t}`).classList.toggle('hidden', t !== tab);
+    const btn = document.getElementById(`kpi-tab-${t}`);
+    btn.className = t === tab ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+  });
+  if (tab === 'objectives' && document.getElementById('obj-year-filter').value) loadObjectives();
+  if (tab === 'weights' && document.getElementById('wt-year-filter').value) loadWeights();
+}
+
+// --- Year CRUD ---
+function openYearModal(id) {
+  document.getElementById('year-id').value = id || '';
+  document.getElementById('modal-year-title').textContent = id ? 'Edit Tahun KPI' : 'Tambah Tahun KPI';
+  if (id) {
+    const y = App.allYears.find(x=>x.id===id);
+    document.getElementById('year-val').value = y?.year || '';
+    document.getElementById('year-label').value = y?.label || '';
+    document.getElementById('year-active').checked = y?.is_active !== false;
+  } else {
+    document.getElementById('year-val').value = '';
+    document.getElementById('year-label').value = '';
+    document.getElementById('year-active').checked = true;
+  }
+  openModal('modal-year');
+}
+
+async function saveYear() {
+  const id = document.getElementById('year-id').value;
+  const year = parseInt(document.getElementById('year-val').value);
+  const label = document.getElementById('year-label').value.trim();
+  const is_active = document.getElementById('year-active').checked;
+  if (!year) { toast('Tahun wajib diisi!', 'error'); return; }
+
+  const payload = { year, label: label || `KPI Tahun ${year}`, is_active };
+  if (BYPASS) {
+    if (id) { const i = App.allYears.findIndex(y=>y.id===id); if(i>-1) App.allYears[i]={...App.allYears[i],...payload}; }
+    else App.allYears.unshift({ id:'local_'+Date.now(), ...payload });
+    renderYearsTable(); populateYearSelects();
+    closeModal('modal-year'); toast('Tahun disimpan', 'success'); return;
+  }
+  try {
+    if (id) { await sb.from('kpi_years').update(payload).eq('id',id); }
+    else { await sb.from('kpi_years').insert([payload]); }
+    await loadYearsForMgmt();
+    closeModal('modal-year'); toast('Tahun disimpan!', 'success');
+  } catch(e) { toast('Error: '+e.message, 'error'); }
+}
+
+async function deleteYear(id) {
+  if (!confirm('Hapus tahun ini? Semua objektif dan bobot akan ikut terhapus!')) return;
+  if (BYPASS) { App.allYears = App.allYears.filter(y=>y.id!==id); renderYearsTable(); return; }
+  const { error } = await sb.from('kpi_years').delete().eq('id',id);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  await loadYearsForMgmt(); toast('Tahun dihapus','success');
+}
+
+// --- Objective CRUD ---
+let krRowCount = 0;
+function addKrRow(kr) {
+  krRowCount++;
+  const div = document.createElement('div');
+  div.className = 'p-2 border border-slate-200 rounded-lg bg-slate-50 space-y-1.5';
+  div.innerHTML = `
+    <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">KR ${krRowCount}</span><button type="button" onclick="this.closest('.p-2').remove()" class="btn btn-danger btn-xs">✕</button></div>
+    <input type="text" class="inp text-xs kr-text" placeholder="Teks Key Result" value="${kr?.kr_text||''}"/>
+    <div class="flex gap-1">
+      <input type="number" class="inp text-xs kr-target" placeholder="Target" value="${kr?.target||''}"/>
+      <input type="text" class="inp text-xs kr-unit" placeholder="Unit (%, Bulan, ...)" value="${kr?.unit||''}"/>
+      <input type="number" class="inp text-xs kr-weight" placeholder="Bobot%" value="${kr?.relative_weight||''}" min="0" max="100"/>
+    </div>`;
+  document.getElementById('kr-rows-container').appendChild(div);
+}
+
+async function openObjectiveModal(id) {
+  document.getElementById('obj-id').value = id || '';
+  document.getElementById('modal-obj-title').textContent = id ? 'Edit Objektif' : 'Tambah Objektif';
+  document.getElementById('kr-rows-container').innerHTML = '';
+  krRowCount = 0;
+  populateYearSelects();
+
+  if (id) {
+    const obj = App.allObjectives.find(o=>o.id===id);
+    if (obj) {
+      document.getElementById('obj-year-id').value = obj.year_id;
+      document.getElementById('obj-nama').value = obj.nama;
+      document.getElementById('obj-formula').value = obj.formula||'';
+      document.getElementById('obj-mode').value = obj.mode||'UNCAPPED';
+    }
+    // Load KRs
+    if (sb && !BYPASS) {
+      const { data } = await sb.from('kpi_key_results').select('*').eq('objective_id',id).order('sort_order');
+      (data||[]).forEach(kr => addKrRow(kr));
+    }
+  } else {
+    document.getElementById('obj-nama').value = '';
+    document.getElementById('obj-formula').value = '';
+    document.getElementById('obj-mode').value = 'UNCAPPED';
+    document.getElementById('obj-year-id').value = document.getElementById('obj-year-filter').value || '';
+    addKrRow();
+  }
+  openModal('modal-objective');
+}
+
+async function saveObjective() {
+  const id = document.getElementById('obj-id').value;
+  const yearId = document.getElementById('obj-year-id').value;
+  const nama = document.getElementById('obj-nama').value.trim();
+  const formula = document.getElementById('obj-formula').value.trim();
+  const mode = document.getElementById('obj-mode').value;
+  if (!yearId || !nama) { toast('Tahun dan nama wajib diisi!','error'); return; }
+
+  const krEls = document.querySelectorAll('#kr-rows-container .p-2');
+  const krs = Array.from(krEls).map((el,i)=>({
+    kr_text: el.querySelector('.kr-text').value.trim(),
+    target: parseFloat(el.querySelector('.kr-target').value),
+    unit: el.querySelector('.kr-unit').value.trim(),
+    relative_weight: parseFloat(el.querySelector('.kr-weight').value),
+    sort_order: i
+  })).filter(k=>k.kr_text && isFinite(k.target) && isFinite(k.relative_weight));
+
+  if (!krs.length) { toast('Minimal 1 KR wajib diisi!','error'); return; }
+
+  const objPayload = { year_id: yearId, nama, formula, mode };
+
+  if (BYPASS) {
+    if (id) { const i = App.allObjectives.findIndex(o=>o.id===id); if(i>-1) App.allObjectives[i]={...App.allObjectives[i],...objPayload,kpi_key_results:krs}; }
+    else App.allObjectives.push({ id:'local_'+Date.now(),...objPayload, kpi_key_results:krs });
+    loadObjectives(); closeModal('modal-objective'); toast('Objektif disimpan','success'); return;
+  }
+
+  try {
+    let objId = id;
+    if (id) { await sb.from('kpi_objectives').update(objPayload).eq('id',id); await sb.from('kpi_key_results').delete().eq('objective_id',id); }
+    else {
+      const { data } = await sb.from('kpi_objectives').insert([objPayload]).select().single();
+      objId = data.id;
+    }
+    await sb.from('kpi_key_results').insert(krs.map(k=>({...k, objective_id:objId})));
+    await loadObjectives();
+    closeModal('modal-objective'); toast('Objektif disimpan!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function loadObjectives() {
+  const yearId = document.getElementById('obj-year-filter').value;
+  const tbody = document.getElementById('objectives-tbody');
+  if (!yearId) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-400 py-8">Pilih tahun terlebih dahulu</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-400 py-4">Memuat...</td></tr>';
+  try {
+    if (sb && !BYPASS) {
+      const { data } = await sb.from('kpi_objectives').select('*, kpi_key_results(*)').eq('year_id',yearId).order('sort_order');
+      App.allObjectives = data || [];
+    }
+    const objs = App.allObjectives.filter(o=>o.year_id===yearId);
+    if (!objs.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-400 py-8">Belum ada objektif</td></tr>'; return; }
+    tbody.innerHTML = objs.map(o=>`<tr>
+      <td class="font-semibold">${o.nama}</td>
+      <td class="text-xs text-slate-500 max-w-xs truncate">${o.formula||'—'}</td>
+      <td><span class="badge ${o.mode==='SCALE5'?'bg-purple-100 text-purple-700':o.mode==='CAP100'?'bg-orange-100 text-orange-700':'bg-blue-light text-blue'}">${o.mode}</span></td>
+      <td>
+        <button onclick="showKrModal('${o.id}')" class="btn btn-ghost btn-xs">${(o.kpi_key_results||[]).length} KR</button>
+      </td>
+      <td class="flex gap-1">
+        <button onclick="openObjectiveModal('${o.id}')" class="btn btn-outline btn-xs">Edit</button>
+        <button onclick="deleteObjective('${o.id}')" class="btn btn-danger btn-xs">Hapus</button>
+      </td>
+    </tr>`).join('');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function showKrModal(objId) {
+  const obj = App.allObjectives.find(o=>o.id===objId);
+  document.getElementById('modal-kr-title').textContent = `KR: ${obj?.nama||''}`;
+  let krs = obj?.kpi_key_results || [];
+  if (!krs.length && sb && !BYPASS) {
+    const { data } = await sb.from('kpi_key_results').select('*').eq('objective_id',objId).order('sort_order');
+    krs = data || [];
+  }
+  document.getElementById('modal-kr-tbody').innerHTML = krs.map((k,i)=>`<tr>
+    <td class="text-center font-bold text-blue">${i+1}</td>
+    <td>${k.kr_text}</td>
+    <td class="text-center">${k.target}</td>
+    <td class="text-center">${k.unit||'—'}</td>
+    <td class="text-center font-bold">${k.relative_weight}%</td>
+  </tr>`).join('');
+  openModal('modal-kr');
+}
+
+async function deleteObjective(id) {
+  if (!confirm('Hapus objektif ini?')) return;
+  if (BYPASS) { App.allObjectives = App.allObjectives.filter(o=>o.id!==id); loadObjectives(); return; }
+  const { error } = await sb.from('kpi_objectives').delete().eq('id',id);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  loadObjectives(); toast('Objektif dihapus','success');
+}
+
+// --- Weight CRUD ---
+async function loadWeights() {
+  const yearId = document.getElementById('wt-year-filter').value;
+  const tbody = document.getElementById('weights-tbody');
+  if (!yearId) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-8">Pilih tahun terlebih dahulu</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">Memuat...</td></tr>';
+  try {
+    if (sb && !BYPASS) {
+      const { data } = await sb.from('employee_kpi_weights').select('*, kpi_objectives(nama)').eq('year_id',yearId).order('employee_name');
+      App.allWeights = data || [];
+    }
+    const wts = App.allWeights.filter(w=>w.year_id===yearId);
+    if (!wts.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-8">Belum ada bobot</td></tr>'; return; }
+    tbody.innerHTML = wts.map(w=>`<tr>
+      <td class="font-semibold">${w.employee_name}</td>
+      <td>${w.kpi_objectives?.nama||App.allObjectives.find(o=>o.id===w.objective_id)?.nama||'—'}</td>
+      <td class="text-center font-bold text-blue">${w.weight}%</td>
+      <td class="flex gap-1">
+        <button onclick="openWeightModal('${w.id}')" class="btn btn-outline btn-xs">Edit</button>
+        <button onclick="deleteWeight('${w.id}')" class="btn btn-danger btn-xs">Hapus</button>
+      </td>
+    </tr>`).join('');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+function openWeightModal(id) {
+  document.getElementById('wt-id').value = id || '';
+  document.getElementById('modal-wt-title').textContent = id ? 'Edit Bobot' : 'Tambah Bobot Karyawan';
+  populateYearSelects();
+  if (id) {
+    const w = App.allWeights.find(x=>x.id===id);
+    if (w) {
+      document.getElementById('wt-year-id').value = w.year_id;
+      loadObjForWeight();
+      setTimeout(()=>{ document.getElementById('wt-objective-id').value = w.objective_id; }, 300);
+      document.getElementById('wt-employee').value = w.employee_name;
+      document.getElementById('wt-weight').value = w.weight;
+    }
+  } else {
+    document.getElementById('wt-year-id').value = document.getElementById('wt-year-filter').value || '';
+    document.getElementById('wt-employee').value = '';
+    document.getElementById('wt-weight').value = '';
+    loadObjForWeight();
+  }
+  openModal('modal-weight');
+}
+
+async function loadObjForWeight() {
+  const yearId = document.getElementById('wt-year-id').value;
+  const sel = document.getElementById('wt-objective-id');
+  sel.innerHTML = '<option value="">— Pilih Objektif —</option>';
+  if (!yearId) return;
+  const objs = sb && !BYPASS
+    ? (await sb.from('kpi_objectives').select('id,nama').eq('year_id',yearId).order('nama')).data || []
+    : App.allObjectives.filter(o=>o.year_id===yearId);
+  objs.forEach(o => sel.add(new Option(o.nama, o.id)));
+}
+
+async function saveWeight() {
+  const id = document.getElementById('wt-id').value;
+  const yearId = document.getElementById('wt-year-id').value;
+  const employee = document.getElementById('wt-employee').value.trim();
+  const objId = document.getElementById('wt-objective-id').value;
+  const weight = parseFloat(document.getElementById('wt-weight').value);
+  if (!yearId||!employee||!objId||isNaN(weight)) { toast('Semua field wajib diisi!','error'); return; }
+  const payload = { year_id:yearId, employee_name:employee, objective_id:objId, weight };
+
+  if (BYPASS) {
+    if (id) { const i=App.allWeights.findIndex(w=>w.id===id); if(i>-1) App.allWeights[i]={...App.allWeights[i],...payload}; }
+    else App.allWeights.push({ id:'local_'+Date.now(), ...payload });
+    loadWeights(); closeModal('modal-weight'); toast('Bobot disimpan','success'); return;
+  }
+  try {
+    if (id) { await sb.from('employee_kpi_weights').update(payload).eq('id',id); }
+    else { await sb.from('employee_kpi_weights').insert([payload]); }
+    loadWeights(); closeModal('modal-weight'); toast('Bobot disimpan!','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function deleteWeight(id) {
+  if (!confirm('Hapus bobot ini?')) return;
+  if (BYPASS) { App.allWeights = App.allWeights.filter(w=>w.id!==id); loadWeights(); return; }
+  const { error } = await sb.from('employee_kpi_weights').delete().eq('id',id);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  loadWeights(); toast('Bobot dihapus','success');
+}
+
+// ================================================================
+// USER MANAGEMENT
+// ================================================================
+async function initUserMgmt() {
+  await loadModuleAccess();
+  await loadUsers();
+}
+
+async function loadModuleAccess() {
+  const tbody = document.getElementById('module-access-tbody');
+  const modules = [
+    { key:'dashboard', label:'Dashboard' },
+    { key:'kpi_eval', label:'Evaluasi KPI' },
+    { key:'kpi_mgmt', label:'Manajemen KPI' },
+    { key:'user_mgmt', label:'Manajemen User' }
+  ];
+
+  let access = [];
+  if (sb && !BYPASS) {
+    const { data } = await sb.from('module_access').select('*');
+    access = data || [];
+  } else {
+    access = [
+      { role:'master_admin', module_key:'dashboard', can_access:true },
+      { role:'master_admin', module_key:'kpi_eval', can_access:true },
+      { role:'master_admin', module_key:'kpi_mgmt', can_access:true },
+      { role:'master_admin', module_key:'user_mgmt', can_access:true },
+      { role:'user', module_key:'dashboard', can_access:true },
+      { role:'user', module_key:'kpi_eval', can_access:true },
+      { role:'user', module_key:'kpi_mgmt', can_access:false },
+      { role:'user', module_key:'user_mgmt', can_access:false }
+    ];
+  }
+
+  const getAccess = (role, key) => access.find(a=>a.role===role&&a.module_key===key)?.can_access;
+  tbody.innerHTML = modules.map(m=>`<tr>
+    <td class="font-semibold">${m.label}</td>
+    <td class="text-center"><span class="badge ${getAccess('master_admin',m.key)?'bg-green-light text-green':'bg-slate-100 text-slate-400'}">${getAccess('master_admin',m.key)?'✓ Akses':'—'}</span></td>
+    <td class="text-center">
+      <label class="toggle"><input type="checkbox" ${getAccess('user',m.key)?'checked':''} onchange="toggleModuleAccess('user','${m.key}',this.checked)"/><span class="toggle-slider"></span></label>
+    </td>
+  </tr>`).join('');
+}
+
+async function toggleModuleAccess(role, key, val) {
+  if (BYPASS) { toast('Mode bypass: perubahan tidak disimpan','info'); return; }
+  try {
+    await sb.from('module_access').upsert({ role, module_key:key, can_access:val });
+    toast('Akses modul diperbarui','success');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('user-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-4">Memuat...</td></tr>';
+  if (BYPASS) {
+    App.allUsers = [
+      { id:'1', nama:'Demo Admin', nik:'001', jabatan:'Administrator', role:'master_admin', is_active:true, created_at:new Date().toISOString() }
+    ];
+    renderUsersTable(App.allUsers); return;
+  }
+  try {
+    const { data } = await sb.from('profiles').select('*').order('created_at', {ascending:false});
+    App.allUsers = data || [];
+    renderUsersTable(App.allUsers);
+  } catch(e) { toast('Error memuat users: '+e.message,'error'); }
+}
+
+function filterUsers() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  renderUsersTable(App.allUsers.filter(u=>(u.nama||'').toLowerCase().includes(q)));
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById('user-tbody');
+  if (!users.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-8">Tidak ada data</td></tr>'; return; }
+  tbody.innerHTML = users.map(u=>`<tr>
+    <td class="font-semibold">${u.nama}</td>
+    <td class="text-slate-500">${u.nik||'—'}</td>
+    <td class="text-slate-500">${u.jabatan||'—'}</td>
+    <td><span class="badge ${u.role==='master_admin'?'bg-blue text-white':'bg-slate-100 text-slate-600'}">${u.role==='master_admin'?'Master Admin':'User'}</span></td>
+    <td><span class="badge ${u.is_active?'bg-green-light text-green':'bg-red-50 text-red-500'}">${u.is_active?'Aktif':'Nonaktif'}</span></td>
+    <td class="text-slate-400 text-xs">${new Date(u.created_at).toLocaleDateString('id-ID')}</td>
+    <td class="flex gap-1">
+      <button onclick="openUserModal('${u.id}')" class="btn btn-outline btn-xs">Edit</button>
+      <button onclick="deleteUser('${u.id}')" class="btn btn-danger btn-xs">Hapus</button>
+    </td>
+  </tr>`).join('');
+}
+
+function openUserModal(id) {
+  document.getElementById('user-id').value = id || '';
+  document.getElementById('modal-user-title').textContent = id ? 'Edit User' : 'Tambah User';
+  const emailRow = document.getElementById('user-email-row');
+  const passRow = document.getElementById('user-pass-row');
+
+  if (id) {
+    const u = App.allUsers.find(x=>x.id===id);
+    document.getElementById('user-nama').value = u?.nama || '';
+    document.getElementById('user-nik').value = u?.nik || '';
+    document.getElementById('user-jabatan').value = u?.jabatan || '';
+    document.getElementById('user-role').value = u?.role || 'user';
+    document.getElementById('user-active').checked = u?.is_active !== false;
+    emailRow.classList.add('hidden');
+    passRow.classList.add('hidden');
+  } else {
+    document.getElementById('user-nama').value = '';
+    document.getElementById('user-nik').value = '';
+    document.getElementById('user-jabatan').value = '';
+    document.getElementById('user-email').value = '';
+    document.getElementById('user-password').value = '';
+    document.getElementById('user-role').value = 'user';
+    document.getElementById('user-active').checked = true;
+    emailRow.classList.remove('hidden');
+    passRow.classList.remove('hidden');
+  }
+  openModal('modal-user');
+}
+
+async function saveUser() {
+  const id = document.getElementById('user-id').value;
+  const nama = document.getElementById('user-nama').value.trim();
+  const nik = document.getElementById('user-nik').value.trim();
+  const jabatan = document.getElementById('user-jabatan').value.trim();
+  const role = document.getElementById('user-role').value;
+  const is_active = document.getElementById('user-active').checked;
+  if (!nama) { toast('Nama wajib diisi!','error'); return; }
+
+  if (BYPASS) {
+    if (id) { const i=App.allUsers.findIndex(u=>u.id===id); if(i>-1) App.allUsers[i]={...App.allUsers[i], nama, nik, jabatan, role, is_active}; }
+    else App.allUsers.unshift({ id:'local_'+Date.now(), nama, nik, jabatan, role, is_active, created_at:new Date().toISOString() });
+    renderUsersTable(App.allUsers); closeModal('modal-user'); toast('User disimpan','success'); return;
+  }
+
+  try {
+    if (id) {
+      await sb.from('profiles').update({ nama, nik, jabatan, role, is_active }).eq('id', id);
+      toast('User diperbarui!','success');
+    } else {
+      const email = document.getElementById('user-email').value.trim();
+      const password = document.getElementById('user-password').value;
+      if (!email || password.length < 8) { toast('Email dan password (min 8 karakter) wajib diisi!','error'); return; }
+      const { data, error } = await sb.auth.admin.createUser({ email, password, user_metadata:{ nama, nik, jabatan, role } });
+      if (error) throw error;
+      toast('User dibuat!','success');
+    }
+    await loadUsers();
+    closeModal('modal-user');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+async function deleteUser(id) {
+  if (id === App.user?.id) { toast('Tidak bisa menghapus akun sendiri!','error'); return; }
+  if (!confirm('Hapus user ini?')) return;
+  if (BYPASS) { App.allUsers = App.allUsers.filter(u=>u.id!==id); renderUsersTable(App.allUsers); return; }
+  const { error } = await sb.auth.admin.deleteUser(id);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  await loadUsers(); toast('User dihapus','success');
+}
+
+// ================================================================
+// MODAL HELPERS
+// ================================================================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ================================================================
+// GUIDE PAGE ACCESS (no auth required)
+// ================================================================
+function showGuideStandalone() {
+  document.getElementById('page-landing').classList.remove('active');
+  const shell = document.getElementById('app-shell');
+  shell.style.removeProperty('display');
+  showPage('guide');
+  // minimal sidebar
+  document.getElementById('sidebar-name').textContent = 'Tamu';
+  document.getElementById('sidebar-role').textContent = 'Panduan';
+}
+
+// ================================================================
+// START APP
+// ================================================================
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
