@@ -718,9 +718,9 @@ function buildSB() {
   ];
   if (isAdm) items.push(
     {sec:'Administrasi'},
-    {pg:'adminKpi',ic:IC.adminKpi,lb:'CRUD KPI'},
+    {pg:'adminKpi',ic:IC.adminKpi,lb:'Manajemen KPI'},
     {pg:'adminEmp',ic:IC.adminEmp,lb:'Data Karyawan'},
-    {pg:'adminUsers',ic:IC.adminUsers,lb:'Manajemen User'},
+    {pg:'adminUsers',ic:IC.adminUsers,lb:'User'},
     {pg:'adminMenus',ic:IC.adminMenus,lb:'Menu Info'},
   );
   q('sbNav').innerHTML = items.map(n => n.sec
@@ -1254,7 +1254,7 @@ async function saveWeights(){const inp=[...q('mWR').querySelectorAll('input[data
    ADMIN EMPLOYEES
 ============================================================ */
 async function renderAdminEmp(pc){
-  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Data Karyawan</div><div class="ph-sub">Kelola data karyawan GA</div></div><button class="btn btn-b btn-sm" onclick="openME()">+ Tambah</button></div>
+  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Data Karyawan</div><div class="ph-sub">Kelola data karyawan</div></div><button class="btn btn-b btn-sm" onclick="openME()">+ Tambah</button></div>
     <div class="card"><div class="tw"><table class="tbl"><thead><tr><th>#</th><th>Nama</th><th>NIK</th><th>Jabatan</th><th>Lokasi</th><th>Status</th><th></th></tr></thead><tbody id="empB"></tbody></table></div>
     <div id="empEm" class="empty" style="display:none;"><span class="ei">&#9679;</span><p>Belum ada karyawan.</p></div></div>`;loadEmps();}
 async function loadEmps(){if(!dbOk)return;ldr();
@@ -1324,7 +1324,7 @@ async function delU(id){
    ADMIN MENUS
 ============================================================ */
 async function renderAdminMenus(pc){
-  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Menu Informasi</div><div class="ph-sub">Konten accordion di halaman login</div></div><button class="btn btn-b btn-sm" onclick="openMM()">+ Tambah</button></div>
+  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Menu Informasi</div><div class="ph-sub">Konten di halaman utama</div></div><button class="btn btn-b btn-sm" onclick="openMM()">+ Tambah</button></div>
     <div class="card"><div class="card-b" style="padding-bottom:0;"><div class="tabs"><button class="tab-b on" onclick="mMTab('guide',this)">Panduan</button><button class="tab-b" onclick="mMTab('info',this)">Info / FAQ</button></div></div>
     <div class="tw"><table class="tbl"><thead><tr><th>#</th><th>Judul</th><th>Konten</th><th>Urutan</th><th>Status</th><th></th></tr></thead><tbody id="menuB"></tbody></table></div>
     <div id="menuEm" class="empty" style="display:none;"><span class="ei">&#9675;</span><p>Belum ada item.</p></div></div>`;loadMenus();}
