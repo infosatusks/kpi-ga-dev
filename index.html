@@ -261,7 +261,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 <div class="loader" id="loader"><div class="spin"></div><span class="ltxt" id="ltxt">Memuat...</span></div>
 
 <!-- ============================================================ LANDING ============================================================ -->
-<div id="pgLanding">
+<div id="pgLanding" class="on">
   <div class="ll">
     <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;"/></div>
     <div class="ll-form">
@@ -667,10 +667,11 @@ async function doLogin() {
 
 function enterApp() {
   q('pgLanding').classList.remove('on');
+  q('pgLanding').style.display = 'none'; // pastikan tersembunyi
   q('appShell').classList.add('on');
   buildSB();
   nav('dashboard');
-  loadLandMenus();
+  if(dbOk) loadLandMenus().catch(()=>{});
 }
 
 function doLogout() {
@@ -678,6 +679,7 @@ function doLogout() {
   clearSession();
   S.user = null;
   q('appShell').classList.remove('on');
+  q('pgLanding').style.display = ''; // reset inline style
   q('pgLanding').classList.add('on');
   q('liPwd').value = '';
   setA('landAlert','');
@@ -1336,13 +1338,17 @@ async function delM(id){if(!confirm('Hapus item?'))return;try{await SB.from('men
    INIT
 ============================================================ */
 (async function init(){
+  // Landing sudah on by default di HTML — tidak perlu classList.add
   try{
-    // Cek sesi tersimpan (login sebelumnya)
-    const saved=loadSession();
-    if(saved&&saved.id){S.user=saved;enterApp();return;}
-  }catch(_){}
-  loadLandMenus();
-  q('pgLanding').classList.add('on');
+    const saved = loadSession();
+    if(saved && saved.id){
+      S.user = saved;
+      enterApp();
+      return;
+    }
+  } catch(_){}
+  // Muat menu accordion (non-blocking, gagal pun tidak masalah)
+  if(dbOk) loadLandMenus().catch(()=>{});
 })();
 </script>
 </body>
