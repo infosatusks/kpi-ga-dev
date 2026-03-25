@@ -4,9 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>KPI Evaluasi — GA Department</title>
+<link rel="icon" href="logo.png" type="image/png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <style>
 /* ============================================================ BASE ============================================================ */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -25,9 +28,10 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:.875rem;line-height:1.6;overflow-x:hidden;}
 
 /* ============================================================ LANDING ============================================================ */
-#pgLanding{display:none;min-height:100vh;}
+#pgLanding{display:none;height:100vh;overflow:hidden;}
 #pgLanding.on{display:flex;}
-.ll{flex:0 0 520px;background:#fff;display:flex;flex-direction:column;padding:44px 60px;position:relative;}
+.ll{flex:0 0 520px;background:#fff;display:flex;flex-direction:column;padding:44px 60px;overflow-y:auto;}
+.lr{flex:1;background:#f0f2f5;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 @media(max-width:900px){.ll{flex:1;padding:32px 28px;}}
 .ll-logo{font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-.04em;margin-bottom:0;}
 .ll-logo-dot{color:var(--yellow);}
@@ -84,7 +88,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--slate);font-size:.82rem;font-weight:600;transition:.15s;white-space:nowrap;border:none;background:none;font-family:inherit;width:100%;text-align:left;}
 .sb-item:hover{background:var(--slate-lt);color:var(--text);}
 .sb-item.on{background:var(--yellow-lt);color:#7a6000;font-weight:700;}
-.sb-icon{font-size:1rem;flex-shrink:0;width:20px;text-align:center;}
+.sb-icon{flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center;}
 .sb-lbl{overflow:hidden;text-overflow:ellipsis;}
 .sb-ft{padding:12px 8px;border-top:1px solid var(--border);}
 .sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:.15s;overflow:hidden;}
@@ -93,7 +97,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-ui{overflow:hidden;}
 .sb-uname{font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sb-urole{font-size:.68rem;color:var(--muted);font-weight:600;}
-.main{flex:1;margin-left:var(--sw);min-height:100vh;transition:.25s;}
+.main{flex:1;margin-left:var(--sw);min-height:100vh;transition:.25s;overflow-x:hidden;width:0;min-width:0;}
 .main.exp{margin-left:64px;}
 .topbar{height:60px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;}
 .tb-l{display:flex;align-items:center;gap:12px;}
@@ -107,7 +111,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .tb-un{font-size:.78rem;font-weight:700;}
 
 /* ============================================================ LAYOUT ============================================================ */
-.pw{padding:24px;max-width:1200px;}
+.pw{padding:24px 28px;width:100%;}
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap;}
 .ph-h{font-size:1.25rem;font-weight:900;}
 .ph-sub{font-size:.77rem;color:var(--muted);font-weight:500;margin-top:2px;}
@@ -259,7 +263,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 <!-- ============================================================ LANDING ============================================================ -->
 <div id="pgLanding">
   <div class="ll">
-    <div class="ll-logo">KPI<span class="ll-logo-dot">.</span></div>
+    <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;"/></div>
     <div class="ll-form">
       <div class="ll-welcome">
         <h1>Selamat Datang</h1>
@@ -288,39 +292,88 @@ textarea.fc{resize:vertical;min-height:80px;}
   </div>
   <div class="lr">
     <div class="lr-inner">
-      <svg width="320" height="260" viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="14" width="220" height="170" rx="12" fill="white" stroke="#dde1e7" stroke-width="1.5"/>
-        <rect x="20" y="14" width="220" height="30" rx="12" fill="#f0f2f5"/><rect x="20" y="34" width="220" height="10" fill="#f0f2f5"/>
-        <circle cx="36" cy="29" r="4.5" fill="#f87171"/><circle cx="50" cy="29" r="4.5" fill="#fbbf24"/><circle cx="64" cy="29" r="4.5" fill="#34d399"/>
-        <rect x="36" y="60" width="70" height="7" rx="3.5" fill="#e2e8f0"/><rect x="36" y="73" width="130" height="5" rx="2.5" fill="#e2e8f0"/><rect x="36" y="84" width="110" height="5" rx="2.5" fill="#e2e8f0"/>
-        <rect x="36" y="100" width="178" height="50" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
-        <rect x="46" y="110" width="55" height="7" rx="3.5" fill="#e2e8f0"/><rect x="46" y="123" width="90" height="5" rx="2.5" fill="#e2e8f0"/><rect x="46" y="134" width="72" height="5" rx="2.5" fill="#e2e8f0"/>
-        <rect x="176" y="110" width="28" height="28" rx="6" fill="#f5c400"/>
-        <rect x="182" y="117" width="16" height="3" rx="1.5" fill="white" opacity=".7"/><rect x="182" y="124" width="12" height="3" rx="1.5" fill="white" opacity=".7"/>
-        <rect x="36" y="164" width="178" height="5" rx="2.5" fill="#e2e8f0"/><rect x="36" y="164" width="110" height="5" rx="2.5" fill="#f5c400"/>
-        <rect x="210" y="88" width="50" height="58" rx="8" fill="#f5c400"/>
-        <circle cx="235" cy="76" r="18" fill="#fde68a"/>
-        <path d="M217 72 Q219 55 235 53 Q251 55 253 72" fill="#1e293b"/>
-        <circle cx="229" cy="78" r="2" fill="#1e293b"/><circle cx="241" cy="78" r="2" fill="#1e293b"/>
-        <path d="M230 85 Q235 89 240 85" stroke="#1e293b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <rect x="220" y="144" width="10" height="44" rx="5" fill="#1e293b"/><rect x="234" y="144" width="10" height="44" rx="5" fill="#1e293b"/>
-        <ellipse cx="225" cy="188" rx="9" ry="5" fill="#0f172a"/><ellipse cx="239" cy="188" rx="9" ry="5" fill="#0f172a"/>
-        <path d="M210 108 Q194 128 186 146" stroke="#f5c400" stroke-width="12" stroke-linecap="round" fill="none"/>
-        <path d="M260 108 Q274 122 280 140" stroke="#f5c400" stroke-width="12" stroke-linecap="round" fill="none"/>
-        <rect x="268" y="140" width="44" height="32" rx="6" fill="white" stroke="#dde1e7" stroke-width="1.2"/>
-        <rect x="274" y="148" width="26" height="3.5" rx="1.75" fill="#e2e8f0"/><rect x="274" y="155" width="20" height="3.5" rx="1.75" fill="#f5c400"/><rect x="274" y="162" width="24" height="3" rx="1.5" fill="#e2e8f0"/>
-        <ellipse cx="235" cy="200" rx="36" ry="7" fill="#e2e8f0"/>
-      </svg>
-      <div class="lr-cap"><h2>Platform Evaluasi KPI Digital</h2><p>Penilaian terstandar, transparan, dan efisien untuk seluruh karyawan GA.</p></div>
+  <div style="position:relative;width:360px;height:300px;">
+    <!-- Grid background -->
+    <svg style="position:absolute;inset:0;opacity:.35;" width="360" height="300">
+      <defs>
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#cbd5e1" stroke-width=".8"/>
+        </pattern>
+      </defs>
+      <rect width="360" height="300" fill="url(#grid)"/>
+    </svg>
+
+    <!-- Dashboard card mockup -->
+    <div style="position:absolute;left:20px;top:20px;width:240px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);padding:20px;border:1px solid #e8ecf0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#f87171;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#34d399;"></div>
+        <div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;margin-left:8px;"></div>
+      </div>
+      <!-- Stat row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div style="background:#fef9e7;border-radius:10px;padding:10px;">
+          <div style="font-size:1.4rem;font-weight:900;color:#92400e;">24</div>
+          <div style="font-size:.65rem;color:#a16207;font-weight:700;">PENILAIAN</div>
+        </div>
+        <div style="background:#eff4ff;border-radius:10px;padding:10px;">
+          <div style="font-size:1.4rem;font-weight:900;color:#1345b7;">12</div>
+          <div style="font-size:.65rem;color:#1a56db;font-weight:700;">KARYAWAN</div>
+        </div>
+      </div>
+      <!-- Progress bars -->
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;font-weight:700;color:#94a3b8;margin-bottom:3px;"><span>KPI 2025</span><span>85%</span></div>
+        <div style="height:6px;background:#f1f5f9;border-radius:3px;"><div style="height:100%;width:85%;background:linear-gradient(90deg,#f5c400,#f97316);border-radius:3px;"></div></div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;font-weight:700;color:#94a3b8;margin-bottom:3px;"><span>KPI 2026</span><span>62%</span></div>
+        <div style="height:6px;background:#f1f5f9;border-radius:3px;"><div style="height:100%;width:62%;background:linear-gradient(90deg,#1a56db,#06b6d4);border-radius:3px;"></div></div>
+      </div>
+      <!-- Score badge -->
+      <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding:8px 10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;font-weight:900;">SF</div>
+        <div><div style="font-size:.72rem;font-weight:800;color:#15803d;">Skor Akhir</div><div style="font-size:1rem;font-weight:900;color:#15803d;">110</div></div>
+      </div>
+    </div>
+
+    <!-- Floating card 2 -->
+    <div style="position:absolute;right:0;top:60px;width:130px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1);padding:14px;border:1px solid #e8ecf0;">
+      <div style="font-size:.65rem;font-weight:800;color:#94a3b8;margin-bottom:8px;">EXPORT</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+        <div style="width:24px;height:24px;border-radius:6px;background:#eff4ff;display:flex;align-items:center;justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        </div>
+        <span style="font-size:.72rem;font-weight:700;color:#334155;">PDF</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:24px;height:24px;border-radius:6px;background:#f7fee7;display:flex;align-items:center;justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <span style="font-size:.72rem;font-weight:700;color:#334155;">JPG</span>
+      </div>
+    </div>
+
+    <!-- Floating badge -->
+    <div style="position:absolute;right:10px;bottom:20px;background:#0f172a;border-radius:10px;padding:10px 14px;box-shadow:0 4px 20px rgba(0,0,0,.2);">
+      <div style="font-size:.65rem;font-weight:700;color:#94a3b8;">Score Factor</div>
+      <div style="font-size:1.5rem;font-weight:900;color:#f5c400;line-height:1.1;">120</div>
     </div>
   </div>
+
+  <div class="lr-cap">
+    <h2>Platform Evaluasi KPI General Affairs</h2>
+    <p>Terstandar, transparan, dan efisien.</p>
+  </div>
+</div>
 </div>
 
 <!-- ============================================================ APP SHELL ============================================================ -->
 <div id="appShell">
   <nav class="sidebar" id="sidebar">
     <div class="sb-hd">
-      <div class="sb-logo">K</div>
+      <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;"/>
       <span class="sb-brand">KPI Evaluasi</span>
       <button class="sb-tog" id="sbTog" onclick="togSB()">&#171;</button>
     </div>
@@ -342,7 +395,7 @@ textarea.fc{resize:vertical;min-height:80px;}
         <span class="tb-title" id="pgTitle">Dashboard</span>
       </div>
       <div class="tb-r">
-        <button class="tb-btn">&#128276;</button>
+        <button class="tb-btn" title="Notifikasi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></button>
         <div class="tb-pill">
           <div class="tb-av" id="tbAv">?</div>
           <span class="tb-un" id="tbUN">User</span>
@@ -587,7 +640,7 @@ function clearSession() {
    AUTH — login via RPC (password hash di DB dengan pgcrypto)
 ============================================================ */
 async function doLogin() {
-  if (!dbOk) { setA('landAlert','Konfigurasi Supabase belum diisi. Hubungi administrator.','w'); return; }
+  if (!dbOk) { setA('landAlert','Konfigurasi Konfigurasi database dahulu! Hubungi administrator.','w'); return; }
   const email = val('liEmail').trim();
   const pwd   = val('liPwd');
   if (!email||!pwd) { setA('landAlert','Email dan password wajib diisi.'); return; }
@@ -599,7 +652,8 @@ async function doLogin() {
     const { data, error } = await SB.rpc('fn_login', { p_email: email, p_password: pwd });
     if (error) throw error;
     if (!data || data.length === 0) throw new Error('Email atau password salah.');
-    const user = data[0];
+    const raw = data[0];
+    const user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active };
     if (!user.is_active) throw new Error('Akun Anda dinonaktifkan. Hubungi administrator.');
     S.user = user;
     saveSession(user);
@@ -632,6 +686,15 @@ function doLogout() {
 /* ============================================================
    SIDEBAR
 ============================================================ */
+const IC = {
+  dashboard:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  kpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>`,
+  guide:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
+  adminKpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  adminEmp:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+  adminUsers:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  adminMenus:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+};
 function buildSB() {
   const isAdm = S.user?.role === 'master_admin';
   const nm  = S.user?.name || S.user?.email || 'User';
@@ -641,16 +704,16 @@ function buildSB() {
   q('tbAv').textContent  = ini;  q('tbUN').textContent   = nm;
   const items = [
     {sec:'Menu Utama'},
-    {pg:'dashboard',ic:'⊞',lb:'Dashboard'},
-    {pg:'kpi',ic:'✦',lb:'Evaluasi KPI'},
-    {pg:'guide',ic:'◎',lb:'Panduan'},
+    {pg:'dashboard',ic:IC.dashboard,lb:'Dashboard'},
+    {pg:'kpi',ic:IC.kpi,lb:'Evaluasi KPI'},
+    {pg:'guide',ic:IC.guide,lb:'Panduan'},
   ];
   if (isAdm) items.push(
     {sec:'Administrasi'},
-    {pg:'adminKpi',ic:'⌗',lb:'CRUD KPI'},
-    {pg:'adminEmp',ic:'⊙',lb:'Data Karyawan'},
-    {pg:'adminUsers',ic:'⊕',lb:'Manajemen User'},
-    {pg:'adminMenus',ic:'≡',lb:'Menu Info'},
+    {pg:'adminKpi',ic:IC.adminKpi,lb:'CRUD KPI'},
+    {pg:'adminEmp',ic:IC.adminEmp,lb:'Data Karyawan'},
+    {pg:'adminUsers',ic:IC.adminUsers,lb:'Manajemen User'},
+    {pg:'adminMenus',ic:IC.adminMenus,lb:'Menu Info'},
   );
   q('sbNav').innerHTML = items.map(n => n.sec
     ? `<div class="sb-sec">${n.sec}</div>`
@@ -731,7 +794,7 @@ async function renderDash(pc) {
       </table></div>
       <div id="dEm" class="empty" style="display:none;"><span class="ei">&#9703;</span><p>Belum ada data penilaian.</p></div>
     </div>`;
-  if(!dbOk){q('dEm').style.display='block';q('dEm').innerHTML='<span class="ei">&#9888;</span><p>Supabase belum dikonfigurasi.</p>';return;}
+  if(!dbOk){q('dEm').style.display='block';q('dEm').innerHTML='<span class="ei">&#9888;</span><p>Konfigurasi database dahulu!.</p>';return;}
   ldr('Memuat...');
   try {
     const[sR,pR]=await Promise.all([
@@ -839,7 +902,9 @@ async function renderKpiForm(pc){
         </div>
         <div class="card"><div class="card-h"><span class="card-t">Catatan &amp; Bukti Pendukung</span></div>
           <div class="card-b">
-            <div class="fg"><label class="fl">Catatan / Deskripsi Capaian <span class="req">*</span></label><textarea class="fc" id="kNote" placeholder="Tulis deskripsi singkat capaian Anda..."></textarea></div>
+            <div class="fg"><label class="fl">Catatan / Deskripsi Capaian <span class="req">*</span></label>
+  <div id="kNoteEditor" style="background:#fff;border-radius:8px;"></div>
+</div>
             <div class="row2">
               <div class="fg"><label class="fl">Bukti Utama (JPG/PNG/PDF) <span class="req">*</span></label>
                 <div class="ubox"><input type="file" id="kEF" accept=".jpg,.jpeg,.png,.pdf" onchange="onEviCh(this)"/>
@@ -858,7 +923,7 @@ async function renderKpiForm(pc){
         <button class="btn btn-y" style="width:100%;justify-content:center;padding:13px;font-size:.92rem;" onclick="calcPreview()">Hitung &amp; Preview Hasil</button>
       </div>
     </div>`;
-  if(!dbOk){q('kW').innerHTML=`<div class="card"><div class="card-b"><div class="alert aw">Supabase belum dikonfigurasi.</div></div></div>`;return;}
+  if(!dbOk){q('kW').innerHTML=`<div class="card"><div class="card-b"><div class="alert aw">Konfigurasi database dahulu!.</div></div></div>`;return;}
   ldr('Memuat data...');
   try {
     const[eR,pR]=await Promise.all([SB.from('employees').select('*').eq('is_active',true).order('name'),SB.from('kpi_periods').select('*').eq('is_active',true).order('year')]);
@@ -868,20 +933,44 @@ async function renderKpiForm(pc){
     const pS=q('kPer'); pS.innerHTML='<option value="">-- Pilih Tahun --</option>';
     (pR.data||[]).forEach(p=>pS.add(new Option(p.label,p.id)));
   }catch(e){setA('kFA','Gagal: '+esc(e.message));}
-  finally{ldr();}
+  finally{
+    ldr();
+    // Init Quill setelah DOM siap
+    setTimeout(()=>{
+      if(window._quill) window._quill = null;
+      if(q('kNoteEditor')) window._quill = new Quill('#kNoteEditor',{
+        theme:'snow',
+        placeholder:'Tulis deskripsi singkat capaian Anda...',
+        modules:{toolbar:[['bold','italic','underline'],['clean'],
+          [{list:'ordered'},{list:'bullet'}]]}
+      });
+    },50);
+  }
 }
 function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e?.nik||''; q('kJab').value=e?.title||''; q('kLok').value=e?.location||''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
 function onKPer(){ q('kOC').style.display='none'; q('kKS').style.display='none'; if(val('kEmp')) loadKObjs(); }
 async function loadKObjs(){
   const eid=val('kEmp'),pid=val('kPer'); if(!eid||!pid)return;
   try{
-    const[oR,wR]=await Promise.all([SB.from('kpi_objectives').select('*').eq('period_id',pid).order('sort_order'),SB.from('employee_kpi_weights').select('*').eq('user_id',eid)]);
+    const[oR,wR]=await Promise.all([
+      SB.from('kpi_objectives').select('*').eq('period_id',pid).order('sort_order'),
+      SB.from('employee_kpi_weights').select('*').eq('user_id',eid)
+    ]);
     const wMap=Object.fromEntries((wR.data||[]).map(w=>[w.objective_id,w.weight]));
     S._kpiObjs=oR.data||[];
+    S._kpiWeightMap=wMap;
     const sel=q('kObj'); sel.innerHTML='<option value="">-- Pilih Objective --</option>';
-    S._kpiObjs.filter(o=>wMap[o.id]!==undefined).forEach(o=>sel.add(new Option(o.name,o.id)));
+    // Tampilkan semua objective; yang sudah punya bobot diberi tanda
+    S._kpiObjs.forEach(o=>{
+      const hasW=wMap[o.id]!==undefined;
+      const opt=new Option(o.name+(hasW?'':' (bobot belum diset)'), o.id);
+      sel.add(opt);
+    });
+    if(!S._kpiObjs.length){
+      setA('kFA','Tidak ada KPI untuk periode ini.','w');
+    }
     q('kOC').style.display='block';
-  }catch(e){setA('kFA','Gagal: '+esc(e.message));}
+  }catch(e){setA('kFA','Gagal memuat objective: '+esc(e.message));}
 }
 async function onKObj(){
   const oid=val('kObj'); if(!oid){q('kKS').style.display='none';return;}
@@ -919,18 +1008,28 @@ function calcScore(){
   return{sum,tot,sfv:mode==='SCALE5'?sum:sfC(sum/100),mode,det};
 }
 function liveCalc(){const r=calcScore();if(!r)return;r.det.forEach((d,i)=>{const el=q('krs_'+i);if(el)el.textContent=d.sp.toFixed(2);});}
+const MAX_MB = 2 * 1024 * 1024; // 2 MB
 function onEviCh(inp){
-  const f=inp.files[0];
-  if(f&&!isImg(f)&&!isPdf(f)){inp.value='';alert('File harus JPG, PNG, atau PDF.');return;}
-  if(f){q('kEFn').textContent=f.name;q('kEFn').style.display='block';if(isImg(f)){const p=q('kEP');p.src=URL.createObjectURL(f);p.style.display='block';}else q('kEP').style.display='none';}
+  const f=inp.files[0]; if(!f)return;
+  if(f.size>MAX_MB){inp.value='';alert('Ukuran file maksimal 2 MB.');return;}
+  if(!isImg(f)&&!isPdf(f)){inp.value='';alert('File harus JPG, PNG, atau PDF.');return;}
+  q('kEFn').textContent=`${f.name} (${(f.size/1024/1024).toFixed(1)} MB)`;
+  q('kEFn').style.display='block';
+  if(isImg(f)){const p=q('kEP');p.src=URL.createObjectURL(f);p.style.display='block';}
+  else q('kEP').style.display='none';
 }
 function onTtdCh(inp){
-  const f=inp.files[0];
-  if(f&&!isImg(f)){inp.value='';alert('Tanda tangan harus JPG atau PNG.');return;}
-  if(f){q('kTFn').textContent=f.name;q('kTFn').style.display='block';const p=q('kTP');p.src=URL.createObjectURL(f);p.style.display='block';}
+  const f=inp.files[0]; if(!f)return;
+  if(f.size>MAX_MB){inp.value='';alert('Ukuran tanda tangan maksimal 2 MB.');return;}
+  if(!isImg(f)){inp.value='';alert('Tanda tangan harus JPG atau PNG.');return;}
+  q('kTFn').textContent=`${f.name} (${(f.size/1024/1024).toFixed(1)} MB)`;
+  q('kTFn').style.display='block';
+  const p=q('kTP'); p.src=URL.createObjectURL(f); p.style.display='block';
 }
 async function calcPreview(){
-  const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj'),note=val('kNote').trim(),
+  const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj'),
+    note=(window._quill?.getText()||'').trim(),
+    noteHtml=window._quill?.root?.innerHTML||'',
     eviF=q('kEF').files[0],ttdF=q('kTF').files[0];
   setA('kFA','');
   if(!eid)return setA('kFA','Pilih karyawan.');if(!pid)return setA('kFA','Pilih periode.');
@@ -938,7 +1037,7 @@ async function calcPreview(){
   if(!eviF)return setA('kFA','Upload bukti pendukung.');if(!ttdF)return setA('kFA','Upload tanda tangan.');
   const res=calcScore();if(!res)return setA('kFA','Gagal menghitung skor.');
   const emp=S._empMap[eid],obj=S._kpiObjs.find(o=>o.id===oid),pLabel=q('kPer').options[q('kPer').selectedIndex]?.text;
-  S.kpiSt={emp,obj,periodId:pid,periodLabel:pLabel,note,eviFile:eviF,ttdFile:ttdF,...res,savedToDb:false};
+  S.kpiSt={emp,obj,periodId:pid,periodLabel:pLabel,note,noteHtml,eviFile:eviF,ttdFile:ttdF,...res,savedToDb:false};
   buildRpt();
   q('pgTitle').textContent='Hasil KPI';
 }
@@ -977,7 +1076,7 @@ function buildRpt(){
         <tfoot><tr><td colspan="3" style="text-align:right;padding-right:10px;">TOTAL</td><td>${s.tot}%</td><td style="color:var(--blue);">${s.sum.toFixed(2)}</td></tr></tfoot>
       </table></div>
       <h6 style="font-weight:900;border-bottom:2px solid var(--border);padding-bottom:8px;margin:16px 0 10px;font-size:.82rem;">Catatan</h6>
-      <div style="padding:10px 12px;background:var(--slate-lt);border-radius:8px;font-size:.82rem;">${esc(s.note)}</div>
+      <div style="padding:10px 12px;background:var(--slate-lt);border-radius:8px;font-size:.82rem;">${s.noteHtml||esc(s.note)}</div>
       <h6 style="font-weight:900;border-bottom:2px solid var(--border);padding-bottom:8px;margin:16px 0 10px;font-size:.82rem;">Lampiran Bukti</h6>
       ${eviSrc?`<img src="${eviSrc}" style="max-height:300px;width:100%;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#f8fafc;"/>`:`<div style="padding:14px;background:var(--slate-lt);border-radius:8px;font-size:.82rem;font-weight:700;color:var(--muted);">&#128197; File PDF: ${esc(s.eviFile.name)}</div>`}
       <div class="rpt-sig">
@@ -1005,7 +1104,7 @@ async function expPdf(){
 function sfn(s){return String(s||'').replace(/[\\/:"*?<>|]/g,'-').replace(/\s+/g,' ').trim();}
 async function saveToDB(){
   const st=S.kpiSt;if(st.savedToDb){alert('Sudah disimpan.');return;}
-  if(!dbOk){alert('Supabase belum dikonfigurasi.');return;}
+  if(!dbOk){alert('Konfigurasi database dahulu!.');return;}
   ldr('Menyimpan semua data...');
   try{
     const uid=S.user?.id,sid=crypto.randomUUID();
@@ -1084,7 +1183,35 @@ function openMP(){setA('mPA','');q('mPY').value='';q('mPL').value='';openM('mPer
 async function savePeriod(){const yr=parseInt(val('mPY')),lbl=val('mPL').trim()||'KPI '+yr;if(!yr)return setA('mPA','Tahun wajib diisi.');try{const{error}=await SB.from('kpi_periods').insert({year:yr,label:lbl,is_active:true});if(error)throw error;closeM('mPeriod');renderAdminKpi(q('pgC'));}catch(e){setA('mPA',esc(e.message));}}
 function popOP(){const s=q('mOP');s.innerHTML='';S._periods.forEach(p=>s.add(new Option(p.label,p.id)));const c=val('akPS');if(c)s.value=c;}
 let _ki=0;
-function addKR(kr=null){_ki++;const row=document.createElement('div');row.className='kr-row';if(kr)row.dataset.krId=kr.id;row.innerHTML=`<input class="fc" placeholder="Nama KR *" value="${esc(kr?.kr_name||'')}" data-f="n" style="font-size:.78rem;"/><input class="fc" type="number" placeholder="Target" value="${kr?.target??''}" data-f="t" style="font-size:.78rem;"/><input class="fc" placeholder="Unit" value="${esc(kr?.unit||'')}" data-f="u" style="font-size:.78rem;"/><input class="fc" type="number" placeholder="Bobot%" value="${kr?.relative_weight??''}" data-f="w" style="font-size:.78rem;"/><button class="ib d" onclick="this.closest('.kr-row').remove()">&#215;</button>`;q('mOKR').appendChild(row);}
+function addKR(kr=null){
+  _ki++;
+  const row=document.createElement('div'); row.className='kr-row'; if(kr)row.dataset.krId=kr.id;
+  row.innerHTML=`
+    <input class="fc" placeholder="Nama KR *" value="${esc(kr?.kr_name||'')}" data-f="n" style="font-size:.78rem;"/>
+    <input class="fc" type="number" placeholder="Target" value="${kr?.target??''}" data-f="t" style="font-size:.78rem;" min="0"/>
+    <select class="fc" data-f="u" style="font-size:.78rem;">
+      ${['%','Skor','Bulan','Kali','Dokumen','Laporan','Kegiatan','Lokasi','Proyek','Kasus'].map(u=>
+        `<option value="${u}" ${kr?.unit===u?'selected':''}>${u}</option>`
+      ).join('')}
+      <option value="__custom__" ${kr?.unit&&!['%','Skor','Bulan','Kali','Dokumen','Laporan','Kegiatan','Lokasi','Proyek','Kasus'].includes(kr.unit)?'selected':''}>Lainnya...</option>
+    </select>
+    <input class="fc" type="number" placeholder="Bobot%" value="${kr?.relative_weight??''}" data-f="w" style="font-size:.78rem;" min="0" max="100"/>
+    <button class="ib d" onclick="this.closest('.kr-row').remove()">×</button>`;
+  // Handle custom unit
+  const unitSel=row.querySelector('[data-f="u"]');
+  if(kr?.unit&&!['%','Skor','Bulan','Kali','Dokumen','Laporan','Kegiatan','Lokasi','Proyek','Kasus'].includes(kr.unit)){
+    unitSel.value='__custom__';
+  }
+  unitSel.onchange=function(){
+    if(this.value==='__custom__'){
+      const inp=document.createElement('input');
+      inp.className='fc'; inp.placeholder='Unit...'; inp.dataset.f='u';
+      inp.style.fontSize='.78rem'; inp.value=kr?.unit||'';
+      this.replaceWith(inp); inp.focus();
+    }
+  };
+  q('mOKR').appendChild(row);
+}
 function openMO(){if(!S._periods.length){alert('Tambah periode terlebih dahulu.');return;}popOP();q('mOT').textContent='Tambah Objective';q('mON').value='';q('mOF').value='';q('mOM').value='UNCAPPED';delete q('mObj').dataset.eid;setA('mOA','');q('mOKR').innerHTML='';addKR();addKR();openM('mObj');}
 function openMOE(oid){const o=S._objectives.find(x=>x.id===oid);if(!o)return;popOP();q('mOT').textContent='Edit Objective';q('mOP').value=o.period_id;q('mON').value=o.name;q('mOF').value=o.formula||'';q('mOM').value=o.mode;q('mObj').dataset.eid=oid;setA('mOA','');q('mOKR').innerHTML='';const krs=o.kpi_key_results||[];if(krs.length)krs.forEach(k=>addKR(k));else{addKR();addKR();}openM('mObj');}
 async function saveObj(){
