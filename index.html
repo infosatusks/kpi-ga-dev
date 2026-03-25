@@ -8,8 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<!-- Quill dipindah ke bawah body agar tidak blocking -->
 <style>
 /* ============================================================ BASE ============================================================ */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -561,6 +560,8 @@ textarea.fc{resize:vertical;min-height:80px;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 /* ============================================================
    CONFIG
@@ -577,12 +578,14 @@ const CFG = {
 let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
-    SB = supabase.createClient(CFG.url, CFG.key, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
-    dbOk = true;
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      SB = supabase.createClient(CFG.url, CFG.key, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+      dbOk = true;
+    }
   }
-} catch(e) { console.warn('Supabase:', e.message); }
+} catch(e) { console.warn('Supabase init gagal:', e.message); }
 
 /* ============================================================
    STATE
@@ -666,12 +669,14 @@ async function doLogin() {
 }
 
 function enterApp() {
-  q('pgLanding').classList.remove('on');
-  q('pgLanding').style.display = 'none'; // pastikan tersembunyi
-  q('appShell').classList.add('on');
-  buildSB();
-  nav('dashboard');
-  if(dbOk) loadLandMenus().catch(()=>{});
+  try {
+    q('pgLanding').classList.remove('on');
+    q('pgLanding').style.display = 'none';
+    q('appShell').classList.add('on');
+    buildSB();
+    nav('dashboard');
+    try { if(dbOk) loadLandMenus(); } catch(_){}
+  } catch(e) { console.error('enterApp error:', e); }
 }
 
 function doLogout() {
@@ -679,7 +684,7 @@ function doLogout() {
   clearSession();
   S.user = null;
   q('appShell').classList.remove('on');
-  q('pgLanding').style.display = ''; // reset inline style
+  q('pgLanding').style.display = '';
   q('pgLanding').classList.add('on');
   q('liPwd').value = '';
   setA('landAlert','');
@@ -934,19 +939,23 @@ async function renderKpiForm(pc){
     (eR.data||[]).forEach(e=>{S._empMap[e.id]=e;eS.add(new Option(e.name,e.id));});
     const pS=q('kPer'); pS.innerHTML='<option value="">-- Pilih Tahun --</option>';
     (pR.data||[]).forEach(p=>pS.add(new Option(p.label,p.id)));
-  }catch(e){setA('kFA','Gagal: '+esc(e.message));}
+  } catch(e){ setA('kFA','Gagal memuat data: '+esc(e.message)); }
   finally{
     ldr();
-    // Init Quill setelah DOM siap
+    // Init Quill setelah DOM siap (opsional)
     setTimeout(()=>{
-      if(window._quill) window._quill = null;
-      if(q('kNoteEditor')) window._quill = new Quill('#kNoteEditor',{
-        theme:'snow',
-        placeholder:'Tulis deskripsi singkat capaian Anda...',
-        modules:{toolbar:[['bold','italic','underline'],['clean'],
-          [{list:'ordered'},{list:'bullet'}]]}
-      });
-    },50);
+      try {
+        if(typeof Quill !== 'undefined' && q('kNoteEditor')) {
+          if(window._quill) { try{window._quill=null;}catch(_){} }
+          window._quill = new Quill('#kNoteEditor',{
+            theme:'snow',
+            placeholder:'Tulis deskripsi singkat capaian Anda...',
+            modules:{toolbar:[['bold','italic','underline'],
+              [{list:'ordered'},{list:'bullet'}],['clean']]}
+          });
+        }
+      } catch(e2){ console.warn('Quill init gagal:', e2.message); }
+    }, 80);
   }
 }
 function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e?.nik||''; q('kJab').value=e?.title||''; q('kLok').value=e?.location||''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
@@ -1335,20 +1344,20 @@ async function saveMenu(){const id=val('mMId'),category=val('mMCat'),title=val('
 async function delM(id){if(!confirm('Hapus item?'))return;try{await SB.from('menu_items').delete().eq('id',id);loadMenus();loadLandMenus();}catch(e){alert(e.message);}}
 
 /* ============================================================
-   INIT
+   INIT — landing selalu tampil, semua step dibungkus try-catch
 ============================================================ */
 (async function init(){
-  // Landing sudah on by default di HTML — tidak perlu classList.add
+  // landing sudah class="on" di HTML — selalu tampil tanpa JS
   try{
     const saved = loadSession();
-    if(saved && saved.id){
+    if (saved && saved.id) {
       S.user = saved;
       enterApp();
       return;
     }
   } catch(_){}
-  // Muat menu accordion (non-blocking, gagal pun tidak masalah)
-  if(dbOk) loadLandMenus().catch(()=>{});
+  // Muat accordion menu (opsional, tidak crash jika gagal)
+  try { if(dbOk) loadLandMenus(); } catch(_){}
 })();
 </script>
 </body>
