@@ -26,8 +26,8 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:.875rem;line-height:1.6;overflow-x:hidden;}
 
 /* ============================================================ LANDING ============================================================ */
-#pgLanding{display:none;height:100vh;overflow:hidden;}
-#pgLanding.on{display:flex;}
+#pgLanding{display:none;}
+#pgLanding.on{display:flex;height:100vh;overflow:hidden;}
 .ll{flex:0 0 520px;background:#fff;display:flex;flex-direction:column;padding:44px 60px;overflow-y:auto;}
 .lr{flex:1;background:#f0f2f5;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 @media(max-width:900px){.ll{flex:1;padding:32px 28px;}}
@@ -781,8 +781,8 @@ function enterApp() {
   try {
     console.log("ENTER APP");
 
-    q('pgLanding').classList.remove('on');
-    q('appShell').classList.add('on');
+    q('pgLanding').style.display = 'none';
+    q('appShell').style.display   = 'flex';
 
     console.log("BUILD SIDEBAR");
     buildSB();
@@ -800,8 +800,8 @@ function enterApp() {
 
 function enterEmployeeApp() {
   try {
-    q('pgLanding').classList.remove('on');
-    q('appShell').classList.add('on');
+    q('pgLanding').style.display = 'none';
+    q('appShell').style.display   = 'flex';
     buildEmployeeSB();
     nav('kpi');
   } catch(e) {
@@ -937,8 +937,8 @@ function doLogout() {
   closeM('mLogout');
   clearSession();
   S.user = null;
-  q('appShell').classList.remove('on');
-  q('pgLanding').classList.add('on');
+  q('appShell').style.display   = 'none';
+  q('pgLanding').style.display  = 'flex';
   if(q('liUser')) q('liUser').value = '';
   if(q('liPwd')) q('liPwd').value = '';
   setA('landAlert','');
