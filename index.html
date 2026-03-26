@@ -963,22 +963,22 @@ function togSB() {
 ============================================================ */
 const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
 function nav(page) {
+  page = (page || '').trim();
   try {
     q('pgTitle').textContent = PG[page] || page;
-    document.querySelectorAll('.sb-item').forEach(b => {
-      if (b.dataset.pg === page) b.classList.add('on');
-      else b.classList.remove('on');
-    });
-    window.scrollTo(0,0);
     const pc = q('pgC');
-    if(page==='dashboard')       renderDash(pc);
-    else if(page==='kpi')        renderKpiForm(pc);
-    else if(page==='myResults')  renderMyResults(pc);
-    else if(page==='guide')      renderGuide(pc);
-    else if(page==='adminKpi')   renderAdminKpi(pc);
-    else if(page==='adminEmp')   renderAdminEmp(pc);
+    if(page==='dashboard') {
+      console.log("MASUK DASHBOARD");
+      renderDash(pc);
+    }
+    else if(page==='kpi') renderKpiForm(pc);
+    else if(page==='myResults') renderMyResults(pc);
+    else if(page==='guide') renderGuide(pc);
+    else if(page==='adminKpi') renderAdminKpi(pc);
+    else if(page==='adminEmp') renderAdminEmp(pc);
     else if(page==='adminUsers') renderAdminUsers(pc);
     else if(page==='adminMenus') renderAdminMenus(pc);
+
   } catch(e) {
     sysErr("Navigasi Error: " + e.message);
   }
