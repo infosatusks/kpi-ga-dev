@@ -963,23 +963,109 @@ function togSB() {
 ============================================================ */
 const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
 function nav(page) {
-  console.log("NAV BARU KEPAKAI");
-
   try {
     page = (page || '').trim();
 
-    const pc = q('pgC');
-    pc.innerHTML = "";
+    console.log("NAV:", page);
 
-    if (page === 'dashboard') {
-      console.log("CALL renderDash");
-      renderDash(pc);
+    const pc = q('pgC');
+    if (!pc) {
+      sysErr("pgC tidak ditemukan");
       return;
     }
+
+    // reset isi
+    pc.innerHTML = "";
+
+    // set title
+    q('pgTitle').textContent = PG[page] || page;
+
+    // active menu
+    document.querySelectorAll('.sb-item').forEach(b => {
+      if (b.dataset.pg === page) b.classList.add('on');
+      else b.classList.remove('on');
+    });
+
+    window.scrollTo(0,0);
+
+    // routing (pakai return biar ga ketimpa)
+    if (page === 'dashboard') {
+      renderDashboardMain(pc);
+      return;
+    }
+
+    if (page === 'kpi') {
+      renderKpiForm(pc);
+      return;
+    }
+
+    if (page === 'myResults') {
+      renderMyResults(pc);
+      return;
+    }
+
+    if (page === 'guide') {
+      renderGuide(pc);
+      return;
+    }
+
+    if (page === 'adminKpi') {
+      renderAdminKpi(pc);
+      return;
+    }
+
+    if (page === 'adminEmp') {
+      renderAdminEmp(pc);
+      return;
+    }
+
+    if (page === 'adminUsers') {
+      renderAdminUsers(pc);
+      return;
+    }
+
+    if (page === 'adminMenus') {
+      renderAdminMenus(pc);
+      return;
+    }
+
+    pc.innerHTML = `<div class="empty">Halaman tidak ditemukan</div>`;
 
   } catch(e) {
     sysErr("Navigasi Error: " + e.message);
   }
+}
+
+function renderDashboardMain(pc) {
+  console.log("DASHBOARD FIX JALAN");
+
+  pc.innerHTML = `
+    <div class="ph">
+      <div>
+        <div class="ph-h">Dashboard</div>
+        <div class="ph-sub">Selamat datang di sistem KPI</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat y">
+        <div class="stat-ico">📊</div>
+        <div class="stat-v">0</div>
+        <div class="stat-l">Total KPI</div>
+      </div>
+      <div class="stat b">
+        <div class="stat-ico">👥</div>
+        <div class="stat-v">0</div>
+        <div class="stat-l">Karyawan</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-b">
+        Halo, ${S.user?.name || 'User'} 👋
+      </div>
+    </div>
+  `;
 }
 
 function renderDash(pc) {
