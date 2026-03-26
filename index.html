@@ -285,16 +285,16 @@ textarea.fc{resize:vertical;min-height:80px;}
         <p>Masuk dengan akun yang telah diberikan oleh administrator.</p>
       </div>
       <div id="landAlert"></div>
-      <div class="lf-g"><label class="lf-l" for="liUser">Username</label>
+      <div class="lf-g"><label class="lf-l">Username</label>
         <input class="lf-i" type="text" id="liUser" placeholder="Masukkan username Anda" autocomplete="username"/></div>
-      <div class="lf-g"><label class="lf-l" for="liPwd">Password</label>
+      <div class="lf-g"><label class="lf-l">Password</label>
         <div class="lf-pw">
           <input class="lf-i" type="password" id="liPwd" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()"/>
           <button class="lf-eye" type="button" onclick="tgPw('liPwd',this)">&#128065;</button>
         </div>
       </div>
       <div class="lf-row">
-        <label class="lf-cb" for="liRemember"><input type="checkbox" id="liRemember"/><span>Ingat saya</span></label>
+        <label class="lf-cb"><input type="checkbox" id="liRemember"/><span>Ingat saya</span></label>
       </div>
       <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
       <div class="lf-acc-tabs">
@@ -438,8 +438,8 @@ textarea.fc{resize:vertical;min-height:80px;}
   <div class="mbox" style="max-width:380px;">
     <div class="mhd"><span class="mt" id="mPT">Tambah Periode</span><button class="mx" onclick="closeM('mPeriod')">&#10005;</button></div>
     <div id="mPA"></div>
-    <div class="fg"><label class="fl" for="mPY">Tahun <span class="req">*</span></label><input class="fc" type="number" id="mPY" placeholder="2027" min="2020" max="2099"/></div>
-    <div class="fg"><label class="fl" for="mPL">Label</label><input class="fc" id="mPL" placeholder="KPI 2027"/></div>
+    <div class="fg"><label class="fl">Tahun <span class="req">*</span></label><input class="fc" type="number" id="mPY" placeholder="2027" min="2020" max="2099"/></div>
+    <div class="fg"><label class="fl">Label</label><input class="fc" id="mPL" placeholder="KPI 2027"/></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
       <button class="btn btn-out btn-sm" onclick="closeM('mPeriod')">Batal</button>
       <button class="btn btn-b btn-sm" onclick="savePeriod()">Simpan</button>
@@ -452,12 +452,12 @@ textarea.fc{resize:vertical;min-height:80px;}
     <div class="mhd"><span class="mt" id="mOT">Tambah KPI</span><button class="mx" onclick="closeM('mObj')">&#10005;</button></div>
     <div id="mOA"></div>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mOP">Periode <span class="req">*</span></label><select class="fs" id="mOP"></select></div>
-      <div class="fg"><label class="fl" for="mOM">Mode <span class="req">*</span></label>
+      <div class="fg"><label class="fl">Periode <span class="req">*</span></label><select class="fs" id="mOP"></select></div>
+      <div class="fg"><label class="fl">Mode <span class="req">*</span></label>
         <select class="fs" id="mOM"><option value="UNCAPPED">UNCAPPED</option><option value="CAP100">CAP100</option><option value="SCALE5">SCALE5 (0–5)</option></select></div>
     </div>
-    <div class="fg"><label class="fl" for="mON">Nama KPI <span class="req">*</span></label><input class="fc" id="mON" placeholder="Contoh: Tercapainya success rate layanan umum"/></div>
-    <div class="fg"><label class="fl" for="mOF">Formula / Keterangan</label><textarea class="fc" id="mOF" placeholder="Penjelasan singkat..."></textarea></div>
+    <div class="fg"><label class="fl">Nama KPI <span class="req">*</span></label><input class="fc" id="mON" placeholder="Contoh: Tercapainya success rate layanan umum"/></div>
+    <div class="fg"><label class="fl">Formula / Keterangan</label><textarea class="fc" id="mOF" placeholder="Penjelasan singkat..."></textarea></div>
     <div class="sep"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
       <span style="font-weight:800;font-size:.83rem;">Key Results</span>
@@ -497,21 +497,21 @@ textarea.fc{resize:vertical;min-height:80px;}
     <div class="mhd"><span class="mt" id="mET">Tambah Karyawan</span><button class="mx" onclick="closeM('mEmp')">&#10005;</button></div>
     <div id="mEA"></div>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mEN">Nama Lengkap <span class="req">*</span></label><input class="fc" id="mEN"/></div>
-      <div class="fg"><label class="fl" for="mENik">NIK</label><input class="fc" id="mENik" placeholder="Nomor Induk"/></div>
+      <div class="fg"><label class="fl">Nama Lengkap <span class="req">*</span></label><input class="fc" id="mEN"/></div>
+      <div class="fg"><label class="fl">NIK</label><input class="fc" id="mENik" placeholder="Nomor Induk"/></div>
     </div>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mEJ">Jabatan</label><input class="fc" id="mEJ" placeholder="e.g. GA Specialist"/></div>
-      <div class="fg"><label class="fl" for="mEL">Lokasi Kerja</label><input class="fc" id="mEL" placeholder="e.g. Wisma Nusantara"/></div>
+      <div class="fg"><label class="fl">Jabatan</label><input class="fc" id="mEJ" placeholder="e.g. GA Specialist"/></div>
+      <div class="fg"><label class="fl">Lokasi Kerja</label><input class="fc" id="mEL" placeholder="e.g. Wisma Nusantara"/></div>
     </div>
-    <div class="fg"><label class="fl" for="mES">Status</label>
+    <div class="fg"><label class="fl">Status</label>
       <select class="fs" id="mES"><option value="true">Aktif</option><option value="false">Non-aktif</option></select>
     </div>
     <div class="sep"></div>
     <p style="font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:10px;">&#128274; Akun Login Karyawan</p>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mEUser">Username <span class="req">*</span></label><input class="fc" type="text" id="mEUser" placeholder="e.g. budi.santoso"/></div>
-      <div class="fg"><label class="fl" for="mEPw">Password <span id="mEPH" class="req">*</span></label>
+      <div class="fg"><label class="fl">Username <span class="req">*</span></label><input class="fc" type="text" id="mEUser" placeholder="e.g. budi.santoso"/></div>
+      <div class="fg"><label class="fl">Password <span id="mEPH" class="req">*</span></label>
         <div class="pw-wrap">
           <input class="fc" type="password" id="mEPw" placeholder="Min. 4 karakter" style="padding-right:36px;"/>
           <button class="tg-pw" type="button" onclick="tgPw('mEPw',this)">&#128065;</button>
@@ -533,19 +533,19 @@ textarea.fc{resize:vertical;min-height:80px;}
     <div class="mhd"><span class="mt" id="mUT">Tambah User</span><button class="mx" onclick="closeM('mUser')">&#10005;</button></div>
     <div id="mUA"></div>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mUName">Nama Lengkap <span class="req">*</span></label><input class="fc" id="mUName"/></div>
-      <div class="fg"><label class="fl" for="mUUser">Username <span class="req">*</span></label><input class="fc" type="text" id="mUUser" placeholder="Masukkan username"/></div>
+      <div class="fg"><label class="fl">Nama Lengkap <span class="req">*</span></label><input class="fc" id="mUName"/></div>
+      <div class="fg"><label class="fl">Username <span class="req">*</span></label><input class="fc" type="text" id="mUUser" placeholder="Masukkan username"/></div>
     </div>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mURole">Role <span class="req">*</span></label>
+      <div class="fg"><label class="fl">Role <span class="req">*</span></label>
         <select class="fs" id="mURole"><option value="user">User</option><option value="master_admin">Master Admin</option></select>
       </div>
-      <div class="fg"><label class="fl" for="mUStatus">Status</label>
+      <div class="fg"><label class="fl">Status</label>
         <select class="fs" id="mUStatus"><option value="true">Aktif</option><option value="false">Non-aktif</option></select>
       </div>
     </div>
     <div class="fg">
-      <label class="fl" for="mUPw">Password <span id="mUPH" class="req">*</span></label>
+      <label class="fl">Password <span id="mUPH" class="req">*</span></label>
       <div class="pw-wrap">
         <input class="fc" type="password" id="mUPw" placeholder="Min. 6 karakter" style="padding-right:40px;"/>
         <button class="tg-pw" type="button" onclick="tgPw('mUPw',this)">&#128065;</button>
@@ -565,14 +565,14 @@ textarea.fc{resize:vertical;min-height:80px;}
     <div class="mhd"><span class="mt" id="mMT">Tambah Item Menu</span><button class="mx" onclick="closeM('mMenu')">&#10005;</button></div>
     <div id="mMA"></div>
     <div class="row2">
-      <div class="fg"><label class="fl" for="mMCat">Kategori <span class="req">*</span></label>
+      <div class="fg"><label class="fl">Kategori <span class="req">*</span></label>
         <select class="fs" id="mMCat"><option value="guide">Panduan</option><option value="info">Info / FAQ</option></select>
       </div>
-      <div class="fg"><label class="fl" for="mMOrd">Urutan</label><input class="fc" type="number" id="mMOrd" value="0" min="0"/></div>
+      <div class="fg"><label class="fl">Urutan</label><input class="fc" type="number" id="mMOrd" value="0" min="0"/></div>
     </div>
-    <div class="fg"><label class="fl" for="mMJud">Judul <span class="req">*</span></label><input class="fc" id="mMJud"/></div>
-    <div class="fg"><label class="fl" for="mMKon">Konten</label><textarea class="fc" id="mMKon" style="min-height:100px;"></textarea></div>
-    <div class="fg"><label class="fl" for="mMSt">Status</label>
+    <div class="fg"><label class="fl">Judul <span class="req">*</span></label><input class="fc" id="mMJud"/></div>
+    <div class="fg"><label class="fl">Konten</label><textarea class="fc" id="mMKon" style="min-height:100px;"></textarea></div>
+    <div class="fg"><label class="fl">Status</label>
       <select class="fs" id="mMSt"><option value="true">Aktif (tampil)</option><option value="false">Non-aktif</option></select>
     </div>
     <input type="hidden" id="mMId"/>
@@ -595,30 +595,28 @@ textarea.fc{resize:vertical;min-height:80px;}
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-const esc = s => {
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// Penanganan Error Tingkat Lanjut agar UI tidak blank
+function sysErr(m) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#dc2626;color:#fff;padding:15px;z-index:999999;font-weight:bold;box-shadow:0 4px 6px rgba(0,0,0,0.3);cursor:pointer;';
+  d.innerHTML = '⚠️ SYSTEM ERROR (Klik untuk menutup): <br/>' + m;
+  d.onclick = () => d.remove();
+  document.body.appendChild(d);
+}
+
+window.onerror = function(msg, src, line) {
+  if(src && src.includes('content.js')) return false;
+  sysErr(`${msg}<br/>Line: ${line}`);
+  return false;
+};
+window.onunhandledrejection = function(e) {
+  if(!e.reason) return;
+  const msg = e.reason.message ? e.reason.message : String(e.reason);
+  if(msg.includes('content.js')) return;
+  sysErr(msg);
 };
 
-const q   = id => document.getElementById(id);
-const val = id => q(id) ? q(id).value : '';
-
-function ldr(msg='') { 
-  q('loader').classList.toggle('on',!!msg); 
-  if(msg) q('ltxt').textContent=msg; 
-}
-function openM(id)  { q(id).classList.add('open'); }
-function closeM(id) { q(id).classList.remove('open'); }
-function setA(id, msg, t='e') {
-  const el=q(id); if(!el)return;
-  const cls={e:'ae',ok:'aok',i:'ai',w:'aw'};
-  el.innerHTML = msg ? `<div class="alert ${cls[t]||'ae'}">${msg}</div>` : '';
-}
-function isImg(f) { if(!f)return false; const n=(f.name||'').toLowerCase(); return ['image/jpeg','image/png'].includes(f.type)&&(n.endsWith('.jpg')||n.endsWith('.jpeg')||n.endsWith('.png')); }
-function isPdf(f) { if(!f)return false; return f.type==='application/pdf'||(f.name && f.name.toLowerCase().endsWith('.pdf')); }
-function tgPw(id, btn) { const i=q(id); i.type=i.type==='password'?'text':'password'; btn.innerHTML=i.type==='text'?'&#128064;':'&#128065;'; }
-function fileToB64(file) { return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);}); }
-
+// Polyfill untuk file lokal jika randomUUID terblokir
 function genUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -632,6 +630,7 @@ const CFG = {
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcnlnanFtcndvcGhkbmx3aHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzk0OTIsImV4cCI6MjA4OTkxNTQ5Mn0.x213qcZyRFUt30VPwR2vxAoReD31BKJeSBey-j09AKs'
 };
 
+// MEMORY STORAGE UNTUK BYPASS ERROR "Tracking Prevention blocked access to storage" DARI BROWSER
 const memoryStorage = {
   _data: {},
   getItem: function(k){ return this._data[k] || null; },
@@ -647,7 +646,7 @@ try {
         persistSession: false, 
         autoRefreshToken: false,
         detectSessionInUrl: false,
-        storage: memoryStorage 
+        storage: memoryStorage // Bypass error DOMException localStorage
       }
     });
     dbOk = true;
@@ -673,6 +672,27 @@ const IC = {
   adminUsers:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
   adminMenus:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
 };
+
+// Fungsi escape yang aman untuk browser lama
+const esc = s => {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+};
+
+const q   = id => document.getElementById(id);
+const val = id => q(id) ? q(id).value : '';
+function ldr(msg='') { q('loader').classList.toggle('on',!!msg); if(msg) q('ltxt').textContent=msg; }
+function openM(id)  { q(id).classList.add('open'); }
+function closeM(id) { q(id).classList.remove('open'); }
+function setA(id, msg, t='e') {
+  const el=q(id); if(!el)return;
+  const cls={e:'ae',ok:'aok',i:'ai',w:'aw'};
+  el.innerHTML = msg ? `<div class="alert ${cls[t]||'ae'}">${msg}</div>` : '';
+}
+function isImg(f) { if(!f)return false; const n=(f.name||'').toLowerCase(); return ['image/jpeg','image/png'].includes(f.type)&&(n.endsWith('.jpg')||n.endsWith('.jpeg')||n.endsWith('.png')); }
+function isPdf(f) { if(!f)return false; return f.type==='application/pdf'||(f.name && f.name.toLowerCase().endsWith('.pdf')); }
+function tgPw(id, btn) { const i=q(id); i.type=i.type==='password'?'text':'password'; btn.innerHTML=i.type==='text'?'&#128064;':'&#128065;'; }
+function fileToB64(file) { return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);}); }
 
 let _memSession = null;
 function saveSession(user) {
@@ -705,17 +725,15 @@ async function doLogin() {
   if (!username||!pwd) { setA('landAlert','Username dan password wajib diisi.'); return; }
   
   setA('landAlert','');
-  const btn = q('btnLogin'); 
-  btn.disabled = true; 
-  btn.innerHTML = '⏳ Masuk...';
+  const btn = q('btnLogin'); btn.disabled = true; btn.innerHTML = '⏳ Masuk...';
   
   try {
-    const res = await SB.rpc('fn_login', { p_email: username, p_password: pwd });
+    const { data, error } = await SB.rpc('fn_login', { p_email: username, p_password: pwd });
     
-    if (res.error) throw res.error;
-    if (!res.data || res.data.length === 0) throw new Error('Login gagal, user tidak ditemukan / password salah.');
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('Login gagal, user tidak ditemukan / password salah.');
     
-    const raw = res.data[0];
+    const raw = data[0];
     const user = { 
       id: raw.out_id || raw.id, 
       name: raw.out_name || raw.name, 
@@ -728,34 +746,45 @@ async function doLogin() {
     
     S.user = user;
     saveSession(user);
-    
-    if (user.role === 'employee') { 
-        enterEmployeeApp(); 
-    } else { 
-        enterApp(); 
-    }
+    if (user.role === 'employee') { enterEmployeeApp(); } else { enterApp(); }
     
   } catch(e) {
-    setA('landAlert', esc(e.message || String(e)));
+    setA('landAlert', esc(e.message));
   } finally {
-    btn.disabled = false; 
-    btn.innerHTML = 'Masuk';
+    btn.disabled = false; btn.innerHTML = 'Masuk';
   }
 }
 
 function enterApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
-  buildSB();
-  nav('dashboard');
-  if(dbOk) loadLandMenus();
+  try {
+    console.log("ENTER APP");
+
+    q('pgLanding').classList.remove('on');
+    q('appShell').classList.add('on');
+
+    console.log("BUILD SIDEBAR");
+    buildSB();
+
+    console.log("NAVIGATE");
+    nav('dashboard');
+
+    if(dbOk) loadLandMenus();
+
+  } catch(e) {
+    console.error(e);
+    sysErr("ERROR: " + e.message);
+  }
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
-  buildEmployeeSB();
-  nav('kpi');
+  try {
+    q('pgLanding').classList.remove('on');
+    q('appShell').classList.add('on');
+    buildEmployeeSB();
+    nav('kpi');
+  } catch(e) {
+    sysErr("GAGAL MEMUAT APLIKASI (KARYAWAN): " + e.message);
+  }
 }
 
 function buildEmployeeSB() {
@@ -934,23 +963,57 @@ function togSB() {
 ============================================================ */
 const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
 function nav(page) {
-  q('pgTitle').textContent = PG[page] || page;
-  document.querySelectorAll('.sb-item').forEach(b => {
-    if (b.dataset.pg === page) b.classList.add('on');
-    else b.classList.remove('on');
-  });
-  window.scrollTo(0,0);
-  const pc = q('pgC');
-  if(page==='dashboard')       renderDash(pc);
-  else if(page==='kpi')        renderKpiForm(pc);
-  else if(page==='myResults')  renderMyResults(pc);
-  else if(page==='guide')      renderGuide(pc);
-  else if(page==='adminKpi')   renderAdminKpi(pc);
-  else if(page==='adminEmp')   renderAdminEmp(pc);
-  else if(page==='adminUsers') renderAdminUsers(pc);
-  else if(page==='adminMenus') renderAdminMenus(pc);
+  try {
+    q('pgTitle').textContent = PG[page] || page;
+    document.querySelectorAll('.sb-item').forEach(b => {
+      if (b.dataset.pg === page) b.classList.add('on');
+      else b.classList.remove('on');
+    });
+    window.scrollTo(0,0);
+    const pc = q('pgC');
+    if(page==='dashboard')       renderDash(pc);
+    else if(page==='kpi')        renderKpiForm(pc);
+    else if(page==='myResults')  renderMyResults(pc);
+    else if(page==='guide')      renderGuide(pc);
+    else if(page==='adminKpi')   renderAdminKpi(pc);
+    else if(page==='adminEmp')   renderAdminEmp(pc);
+    else if(page==='adminUsers') renderAdminUsers(pc);
+    else if(page==='adminMenus') renderAdminMenus(pc);
+  } catch(e) {
+    sysErr("Navigasi Error: " + e.message);
+  }
 }
 
+function renderDash(pc) {
+  console.log("RENDER DASH JALAN", pc);
+  pc.innerHTML = `
+    <div class="ph">
+      <div>
+        <div class="ph-h">Dashboard</div>
+        <div class="ph-sub">Selamat datang di sistem KPI</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat y">
+        <div class="stat-ico">📊</div>
+        <div class="stat-v">0</div>
+        <div class="stat-l">Total KPI</div>
+      </div>
+      <div class="stat b">
+        <div class="stat-ico">👥</div>
+        <div class="stat-v">0</div>
+        <div class="stat-l">Karyawan</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-b">
+        Halo, ${S.user?.name || 'User'} 👋
+      </div>
+    </div>
+  `;
+}
 /* ============================================================
    LANDING MENUS
 ============================================================ */
@@ -1152,19 +1215,19 @@ async function renderKpiForm(pc){
       <div class="card"><div class="card-h"><span class="card-t">Identitas Karyawan &amp; Periode</span></div>
         <div class="card-b">
           <div class="row2">
-            <div class="fg"><label class="fl" for="kEmp">Nama Karyawan <span class="req">*</span></label><select class="fs" id="kEmp" onchange="onKEmp()"><option value="">-- Pilih --</option></select></div>
-            <div class="fg"><label class="fl" for="kPer">Periode KPI <span class="req">*</span></label><select class="fs" id="kPer" onchange="onKPer()"><option value="">-- Pilih --</option></select></div>
+            <div class="fg"><label class="fl">Nama Karyawan <span class="req">*</span></label><select class="fs" id="kEmp" onchange="onKEmp()"><option value="">-- Pilih --</option></select></div>
+            <div class="fg"><label class="fl">Periode KPI <span class="req">*</span></label><select class="fs" id="kPer" onchange="onKPer()"><option value="">-- Pilih --</option></select></div>
           </div>
           <div class="row3">
-            <div class="fg"><label class="fl" for="kNik">NIK</label><input class="fc" id="kNik" readonly placeholder="—"/></div>
-            <div class="fg"><label class="fl" for="kJab">Jabatan</label><input class="fc" id="kJab" readonly placeholder="—"/></div>
-            <div class="fg"><label class="fl" for="kLok">Lokasi</label><input class="fc" id="kLok" readonly placeholder="—"/></div>
+            <div class="fg"><label class="fl">NIK</label><input class="fc" id="kNik" readonly placeholder="—"/></div>
+            <div class="fg"><label class="fl">Jabatan</label><input class="fc" id="kJab" readonly placeholder="—"/></div>
+            <div class="fg"><label class="fl">Lokasi</label><input class="fc" id="kLok" readonly placeholder="—"/></div>
           </div>
         </div>
       </div>
       <div class="card" id="kOC" style="display:none;"><div class="card-h"><span class="card-t">Pilih Objective KPI</span></div>
         <div class="card-b">
-          <div class="fg"><label class="fl" for="kObj">Objective <span class="req">*</span></label><select class="fs" id="kObj" onchange="onKObj()"><option value="">-- Pilih --</option></select></div>
+          <div class="fg"><label class="fl">Objective <span class="req">*</span></label><select class="fs" id="kObj" onchange="onKObj()"><option value="">-- Pilih --</option></select></div>
           <div id="kOI"></div>
         </div>
       </div>
@@ -1188,12 +1251,12 @@ async function renderKpiForm(pc){
               </div>
             </div>
             <div class="row2">
-              <div class="fg"><label class="fl" for="kEF">Bukti Utama (JPG/PNG/PDF) <span class="req">*</span></label>
+              <div class="fg"><label class="fl">Bukti Utama (JPG/PNG/PDF) <span class="req">*</span></label>
                 <div class="ubox"><input type="file" id="kEF" accept=".jpg,.jpeg,.png,.pdf" onchange="onEviCh(this)"/>
                   <span class="ubox-ico">&#128447;</span><p class="ubox-txt">JPG, PNG, atau PDF</p>
                   <p class="ubox-fn" id="kEFn"></p><img id="kEP" class="uprev"/></div>
               </div>
-              <div class="fg"><label class="fl" for="kTF">Tanda Tangan (JPG/PNG) <span class="req">*</span></label>
+              <div class="fg"><label class="fl">Tanda Tangan (JPG/PNG) <span class="req">*</span></label>
                 <div class="ubox"><input type="file" id="kTF" accept=".jpg,.jpeg,.png" onchange="onTtdCh(this)"/>
                   <span class="ubox-ico">&#128393;</span><p class="ubox-txt">Upload foto tanda tangan</p>
                   <p class="ubox-fn" id="kTFn"></p><img id="kTP" class="uprev"/></div>
@@ -1275,7 +1338,7 @@ function renderKRInputs(krs){
     <div class="krb">
       <div class="krb-t">${esc(k.kr_name)}<span class="krb-p">Target: ${k.target} ${k.unit}</span><span class="krb-p">Bobot: ${k.relative_weight}%</span></div>
       <div class="kr-inp">
-        <div><label class="fl" style="font-size:.7rem;" for="kr_${i}">Realisasi (${k.unit})</label><input class="fc" type="number" id="kr_${i}" placeholder="0" step="any" oninput="liveCalc()"/></div>
+        <div><label class="fl" style="font-size:.7rem;">Realisasi (${k.unit})</label><input class="fc" type="number" id="kr_${i}" placeholder="0" step="any" oninput="liveCalc()"/></div>
         <div><label class="fl" style="font-size:.7rem;">Skor KR</label><div class="kr-score" id="krs_${i}">—</div></div>
       </div>
     </div>`).join('');
@@ -1399,7 +1462,7 @@ async function saveToDB(){
   if(!dbOk){alert('Konfigurasi database dahulu!');return;}
   ldr('Menyimpan semua data...');
   try{
-    const sid=genUUID();
+    const sid=genUUID(); // Fix: Menggunakan custom genUUID untuk bypass blokir file lokal
     const isEmp=S.user && S.user.role==='employee';
     const eviB64=await fileToB64(st.eviFile),ttdB64=await fileToB64(st.ttdFile),eviType=isPdf(st.eviFile)?'pdf':'image';
     const{error:sE}=await SB.from('kpi_submissions').insert({
@@ -1749,6 +1812,7 @@ async function delM(id){if(!confirm('Hapus item?'))return;try{await SB.from('men
   } catch(_){}
   try { if(dbOk) loadLandMenus(); } catch(_){}
 })();
+  
 </script>
 </body>
 </html>
