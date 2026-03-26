@@ -757,13 +757,22 @@ async function doLogin() {
 
 function enterApp() {
   try {
+    console.log("ENTER APP");
+
     q('pgLanding').classList.remove('on');
     q('appShell').classList.add('on');
+
+    console.log("BUILD SIDEBAR");
     buildSB();
+
+    console.log("NAVIGATE");
     nav('dashboard');
+
     if(dbOk) loadLandMenus();
+
   } catch(e) {
-    sysErr("GAGAL MEMUAT APLIKASI (ADMIN): " + e.message);
+    console.error(e);
+    sysErr("ERROR: " + e.message);
   }
 }
 
