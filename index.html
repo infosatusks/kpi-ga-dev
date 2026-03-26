@@ -280,7 +280,7 @@ textarea.fc{resize:vertical;min-height:80px;}
       </div>
       <div id="landAlert"></div>
       <div class="lf-g"><label class="lf-l">Email / Username</label>
-        <input class="lf-i" type="text" id="liUser" placeholder="Masukkan username Anda" autocomplete="username"/></div>
+        <input class="lf-i" type="text" id="liUser" placeholder="Username" autocomplete="username"/></div>
       <div class="lf-g"><label class="lf-l">Password</label>
         <div class="lf-pw">
           <input class="lf-i" type="password" id="liPwd" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -619,7 +619,7 @@ let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
     SB = supabase.createClient(CFG.url, CFG.key, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { persistSession: false, autoRefreshToken: false, storage: {getItem:()=>null,setItem:()=>{},removeItem:()=>{}} }
     });
     dbOk = true;
   }
@@ -708,16 +708,20 @@ async function doLogin() {
 }
 
 function enterApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
+  q('pgLanding').className='';
+  q('pgLanding').setAttribute('style','display:none!important');
+  q('appShell').className='on';
+  q('appShell').setAttribute('style','display:flex!important;width:100%;min-height:100vh');
   buildSB();
   nav('dashboard');
   if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
+  q('pgLanding').className='';
+  q('pgLanding').setAttribute('style','display:none!important');
+  q('appShell').className='on';
+  q('appShell').setAttribute('style','display:flex!important;width:100%;min-height:100vh');
   buildEmployeeSB();
   nav('kpi');
 }
