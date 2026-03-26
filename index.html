@@ -280,7 +280,7 @@ textarea.fc{resize:vertical;min-height:80px;}
       </div>
       <div id="landAlert"></div>
       <div class="lf-g"><label class="lf-l">Email / Username</label>
-        <input class="lf-i" type="text" id="liUser" placeholder="Username" autocomplete="username"/></div>
+        <input class="lf-i" type="text" id="liUser" placeholder="Masukkan email Anda" autocomplete="email"/></div>
       <div class="lf-g"><label class="lf-l">Password</label>
         <div class="lf-pw">
           <input class="lf-i" type="password" id="liPwd" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -619,7 +619,7 @@ let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
     SB = supabase.createClient(CFG.url, CFG.key, {
-      auth: { persistSession: false, autoRefreshToken: false, storage: {getItem:()=>null,setItem:()=>{},removeItem:()=>{}} }
+      auth: { persistSession: false, autoRefreshToken: false }
     });
     dbOk = true;
   }
@@ -683,45 +683,58 @@ function clearSession() {
 }
 
 async function doLogin() {
-  if (!dbOk) { setA('landAlert','Konfigurasi Konfigurasi database dahulu! Hubungi administrator.','w'); return; }
-  const email = val('liUser').trim();
-  const pwd   = val('liPwd');
-  if (!email||!pwd) { setA('landAlert','Email dan password wajib diisi.'); return; }
-  setA('landAlert','');
-  const btn = q('btnLogin'); btn.disabled = true;
-  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--text);border-radius:50%;animation:sp .6s linear infinite;"></span> Masuk...';
   try {
-    const { data, error } = await SB.rpc('fn_login', { p_email: email, p_password: pwd });
-    if (error) throw error;
-    if (!data || data.length === 0) throw new Error('Email atau password salah.');
-    const raw = data[0];
-    const user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active, source:raw.out_source };
-    if (!user.is_active) throw new Error('Akun Anda dinonaktifkan. Hubungi administrator.');
+    var loginField = document.getElementById('liUser') || document.getElementById('liEmail');
+    var email = loginField ? loginField.value.trim() : '';
+    var pwd = document.getElementById('liPwd') ? document.getElementById('liPwd').value : '';
+    alert('STEP 1: dbOk=' + dbOk + ' email=' + email + ' pwd=' + (pwd?'ada':'kosong'));
+
+    if (!dbOk) { alert('STOP: dbOk false'); return; }
+    if (!email || !pwd) { alert('STOP: kosong'); return; }
+
+    var btn = document.getElementById('btnLogin');
+    alert('STEP 2: btn=' + (btn?'ada':'NULL'));
+    if(btn){ btn.disabled = true; btn.textContent = 'Masuk...'; }
+
+    alert('STEP 3: Akan panggil RPC fn_login');
+    var result = await SB.rpc('fn_login', { p_email: email, p_password: pwd });
+    alert('STEP 4: RPC selesai. error=' + JSON.stringify(result.error) + ' data=' + JSON.stringify(result.data));
+
+    if (result.error) throw result.error;
+    if (!result.data || result.data.length === 0) throw new Error('Data kosong - login gagal');
+
+    var raw = result.data[0];
+    alert('STEP 5: raw=' + JSON.stringify(raw));
+
+    var user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active };
+    alert('STEP 6: user.role=' + user.role + ' is_active=' + user.is_active);
+
     S.user = user;
-    saveSession(user);
+    alert('STEP 7: Akan panggil enterApp...');
     if (user.role === 'employee') { enterEmployeeApp(); } else { enterApp(); }
-  } catch(e) {
-    setA('landAlert', esc(e.message));
-    btn.disabled = false;
-    btn.innerHTML = 'Masuk';
+    alert('STEP 8: enterApp selesai');
+
+  } catch(ex) {
+    alert('ERROR di step: ' + ex.message + ' | ' + ex.stack);
+    var btn2 = document.getElementById('btnLogin');
+    if(btn2){ btn2.disabled = false; btn2.textContent = 'Masuk'; }
+    var la = document.getElementById('landAlert');
+    if(la) la.innerHTML = '<div style="color:red;padding:8px">' + ex.message + '</div>';
   }
 }
 
+
 function enterApp() {
-  q('pgLanding').className='';
-  q('pgLanding').setAttribute('style','display:none!important');
-  q('appShell').className='on';
-  q('appShell').setAttribute('style','display:flex!important;width:100%;min-height:100vh');
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
   buildSB();
   nav('dashboard');
   if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').className='';
-  q('pgLanding').setAttribute('style','display:none!important');
-  q('appShell').className='on';
-  q('appShell').setAttribute('style','display:flex!important;width:100%;min-height:100vh');
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
   buildEmployeeSB();
   nav('kpi');
 }
