@@ -97,8 +97,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-ui{overflow:hidden;}
 .sb-uname{font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sb-urole{font-size:.68rem;color:var(--muted);font-weight:600;}
-.main{display:block;margin-left:var(--sw);min-height:100vh;transition:.25s;overflow-x:hidden;}
-.main.exp{margin-left:64px;}
+.main{display:block;margin-left:var(--sw);width:calc(100vw - var(--sw));min-height:100vh;transition:.25s;overflow-x:hidden;overflow-y:auto;}
+.main.exp{margin-left:64px;width:calc(100vw - 64px);}
 .topbar{height:60px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;}
 .tb-l{display:flex;align-items:center;gap:12px;}
 .tb-r{display:flex;align-items:center;gap:8px;}
@@ -264,7 +264,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.mob{transform:translateX(0);}
-  .main{margin-left:0!important;}
+  .main{margin-left:0!important;width:100vw!important;}
   .pw{padding:16px;}
   .stats{grid-template-columns:1fr 1fr;}
   #mobBtn { display: flex !important; }
@@ -783,7 +783,7 @@ function enterApp() {
     console.log("ENTER APP");
 
     q('pgLanding').style.display  = 'none';
-    q('appShell').style.cssText = 'display:block;width:100%;min-height:100vh;';
+    q('appShell').style.cssText = 'display:block;width:100vw;min-height:100vh;';
 
     console.log("BUILD SIDEBAR");
     buildSB();
