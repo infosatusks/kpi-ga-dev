@@ -963,72 +963,19 @@ function togSB() {
 ============================================================ */
 const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
 function nav(page) {
+  console.log("NAV BARU KEPAKAI");
+
   try {
     page = (page || '').trim();
 
     const pc = q('pgC');
-    if (!pc) {
-      sysErr("pgC tidak ditemukan");
-      return;
-    }
-
-    // 🔥 CLEAR DULU (INI KUNCI)
     pc.innerHTML = "";
 
-    // title
-    q('pgTitle').textContent = PG[page] || page;
-
-    // active menu
-    document.querySelectorAll('.sb-item').forEach(b => {
-      if (b.dataset.pg === page) b.classList.add('on');
-      else b.classList.remove('on');
-    });
-
-    window.scrollTo(0,0);
-
-    // 🔥 SWITCH YANG PASTI (pakai return semua)
     if (page === 'dashboard') {
+      console.log("CALL renderDash");
       renderDash(pc);
       return;
     }
-
-    if (page === 'kpi') {
-      renderKpiForm(pc);
-      return;
-    }
-
-    if (page === 'myResults') {
-      renderMyResults(pc);
-      return;
-    }
-
-    if (page === 'guide') {
-      renderGuide(pc);
-      return;
-    }
-
-    if (page === 'adminKpi') {
-      renderAdminKpi(pc);
-      return;
-    }
-
-    if (page === 'adminEmp') {
-      renderAdminEmp(pc);
-      return;
-    }
-
-    if (page === 'adminUsers') {
-      renderAdminUsers(pc);
-      return;
-    }
-
-    if (page === 'adminMenus') {
-      renderAdminMenus(pc);
-      return;
-    }
-
-    // fallback
-    pc.innerHTML = `<div class="empty">Halaman tidak ditemukan</div>`;
 
   } catch(e) {
     sysErr("Navigasi Error: " + e.message);
