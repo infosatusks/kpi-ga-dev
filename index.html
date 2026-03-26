@@ -26,7 +26,7 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:.875rem;line-height:1.6;overflow-x:hidden;}
 
 /* ============================================================ LANDING ============================================================ */
-#pgLanding{display:none;height:100vh;overflow:hidden;}
+#pgLanding{height:100vh;overflow:hidden;}
 #pgLanding.on{display:flex;}
 .ll{flex:0 0 520px;background:#fff;display:flex;flex-direction:column;padding:44px 60px;overflow-y:auto;}
 .lr{flex:1;background:#f0f2f5;display:flex;align-items:center;justify-content:center;overflow:hidden;}
@@ -72,7 +72,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .lr-cap p{font-size:.84rem;color:var(--muted);max-width:300px;margin:0 auto;}
 
 /* ============================================================ APP SHELL ============================================================ */
-#appShell{display:none;min-height:100vh;width:100%;}
+#appShell{min-height:100vh;width:100%;}
 #appShell.on{display:flex;width:100%;}
 .sidebar{width:var(--sw);min-height:100vh;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:.25s;}
 .sidebar.col{width:64px;}
@@ -270,7 +270,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 <div class="loader" id="loader"><div class="spin"></div><span class="ltxt" id="ltxt">Memuat...</span></div>
 
 <!-- ============================================================ LANDING ============================================================ -->
-<div id="pgLanding" class="on">
+<div id="pgLanding" class="on" style="display:flex">
   <div class="ll">
     <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;onerror=this.style.display='none'"/></div>
     <div class="ll-form">
@@ -379,7 +379,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 </div>
 
 <!-- ============================================================ APP SHELL ============================================================ -->
-<div id="appShell">
+<div id="appShell" style="display:none">
   <nav class="sidebar" id="sidebar">
     <div class="sb-hd">
       <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;onerror=this.style.display='none'"/>
@@ -725,16 +725,20 @@ async function doLogin() {
 
 
 function enterApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
+  q('pgLanding').style.display = 'none';
+  q('appShell').style.display = 'flex';
+  q('appShell').style.width = '100%';
+  q('appShell').style.minHeight = '100vh';
   buildSB();
   nav('dashboard');
   if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
+  q('pgLanding').style.display = 'none';
+  q('appShell').style.display = 'flex';
+  q('appShell').style.width = '100%';
+  q('appShell').style.minHeight = '100vh';
   buildEmployeeSB();
   nav('kpi');
 }
@@ -855,9 +859,10 @@ function doLogout() {
   closeM('mLogout');
   clearSession();
   S.user = null;
-  q('appShell').classList.remove('on');
-  q('pgLanding').classList.add('on');
-  q('liPwd').value = '';
+  q('appShell').style.display = 'none';
+  q('pgLanding').style.display = 'flex';
+  var pw = q('liPwd') || q('liUser');
+  if(pw) pw.value = '';
   setA('landAlert','');
 }
 
