@@ -671,21 +671,27 @@ function fileToB64(file) { return new Promise((res,rej)=>{const r=new FileReader
 /* ============================================================
    SESSION (localStorage — no Supabase Auth)
 ============================================================ */
+let _memSession = null; // fallback jika storage diblokir browser
 function saveSession(user) {
-  if (q('liRemember').checked)
-    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  else
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  _memSession = user;
+  try {
+    if (q('liRemember').checked)
+      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    else
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  } catch(_) { /* storage diblokir, pakai memory saja */ }
 }
 function loadSession() {
+  if (_memSession) return _memSession;
   try {
     const s = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     return s ? JSON.parse(s) : null;
   } catch(_) { return null; }
 }
 function clearSession() {
-  localStorage.removeItem(SESSION_KEY);
-  sessionStorage.removeItem(SESSION_KEY);
+  _memSession = null;
+  try { localStorage.removeItem(SESSION_KEY); } catch(_){}
+  try { sessionStorage.removeItem(SESSION_KEY); } catch(_){}
 }
 
 /* ============================================================
