@@ -595,32 +595,63 @@ textarea.fc{resize:vertical;min-height:80px;}
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-window.onerror = function(msg, src, line, col) {
+// Penanganan Error Tingkat Lanjut agar UI tidak blank
+function sysErr(m) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:#dc2626;color:#fff;padding:15px;z-index:999999;font-weight:bold;box-shadow:0 4px 6px rgba(0,0,0,0.3);cursor:pointer;';
+  d.innerHTML = '⚠️ SYSTEM ERROR (Klik untuk menutup): <br/>' + m;
+  d.onclick = () => d.remove();
+  document.body.appendChild(d);
+}
+
+window.onerror = function(msg, src, line) {
   if(src && src.includes('content.js')) return false;
-  alert(`🔴 SYSTEM ERROR:\n${msg}\nLine: ${line}\nSource: ${src}`);
+  sysErr(`${msg}<br/>Line: ${line}`);
   return false;
 };
 window.onunhandledrejection = function(e) {
   if(!e.reason) return;
-  const msg = e.reason?.message || String(e.reason);
+  const msg = e.reason.message ? e.reason.message : String(e.reason);
   if(msg.includes('content.js')) return;
-  alert(`🟠 ASYNC ERROR:\n${msg}`);
+  sysErr(msg);
 };
+
+// Polyfill untuk file lokal jika randomUUID terblokir
+function genUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 const CFG = {
   url: 'https://sjrygjqmrwophdnlwhqf.supabase.co',
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcnlnanFtcndvcGhkbmx3aHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzk0OTIsImV4cCI6MjA4OTkxNTQ5Mn0.x213qcZyRFUt30VPwR2vxAoReD31BKJeSBey-j09AKs'
 };
 
+// MEMORY STORAGE UNTUK BYPASS ERROR "Tracking Prevention blocked access to storage" DARI BROWSER
+const memoryStorage = {
+  _data: {},
+  getItem: function(k){ return this._data[k] || null; },
+  setItem: function(k,v){ this._data[k] = v; },
+  removeItem: function(k){ delete this._data[k]; }
+};
+
 let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
     SB = supabase.createClient(CFG.url, CFG.key, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { 
+        persistSession: false, 
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        storage: memoryStorage // Bypass error DOMException localStorage
+      }
     });
     dbOk = true;
   }
-} catch(e) { console.warn('Supabase:', e.message); }
+} catch(e) { console.warn('Supabase Error:', e.message); }
 
 const S = {
   user: null,
@@ -642,9 +673,14 @@ const IC = {
   adminMenus:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
 };
 
-const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// Fungsi escape yang aman untuk browser lama
+const esc = s => {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+};
+
 const q   = id => document.getElementById(id);
-const val = id => q(id)?.value ?? '';
+const val = id => q(id) ? q(id).value : '';
 function ldr(msg='') { q('loader').classList.toggle('on',!!msg); if(msg) q('ltxt').textContent=msg; }
 function openM(id)  { q(id).classList.add('open'); }
 function closeM(id) { q(id).classList.remove('open'); }
@@ -654,7 +690,7 @@ function setA(id, msg, t='e') {
   el.innerHTML = msg ? `<div class="alert ${cls[t]||'ae'}">${msg}</div>` : '';
 }
 function isImg(f) { if(!f)return false; const n=(f.name||'').toLowerCase(); return ['image/jpeg','image/png'].includes(f.type)&&(n.endsWith('.jpg')||n.endsWith('.jpeg')||n.endsWith('.png')); }
-function isPdf(f) { if(!f)return false; return f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf'); }
+function isPdf(f) { if(!f)return false; return f.type==='application/pdf'||(f.name && f.name.toLowerCase().endsWith('.pdf')); }
 function tgPw(id, btn) { const i=q(id); i.type=i.type==='password'?'text':'password'; btn.innerHTML=i.type==='text'?'&#128064;':'&#128065;'; }
 function fileToB64(file) { return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);}); }
 
@@ -662,7 +698,8 @@ let _memSession = null;
 function saveSession(user) {
   _memSession = user;
   try {
-    if (q('liRemember')?.checked) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    const rm = q('liRemember');
+    if (rm && rm.checked) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
     else sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
   } catch(_) { }
 }
@@ -697,7 +734,13 @@ async function doLogin() {
     if (!data || data.length === 0) throw new Error('Login gagal, user tidak ditemukan / password salah.');
     
     const raw = data[0];
-    const user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active, source:raw.out_source };
+    const user = { 
+      id: raw.out_id || raw.id, 
+      name: raw.out_name || raw.name, 
+      email: raw.out_email || raw.email, 
+      role: raw.out_role || raw.role, 
+      is_active: raw.out_is_active !== undefined ? raw.out_is_active : raw.is_active 
+    };
     
     if (!user.is_active) throw new Error('Akun Anda dinonaktifkan. Hubungi administrator.');
     
@@ -720,7 +763,7 @@ function enterApp() {
     nav('dashboard');
     if(dbOk) loadLandMenus();
   } catch(e) {
-    alert("GAGAL MEMUAT APLIKASI (ADMIN): " + e.message);
+    sysErr("GAGAL MEMUAT APLIKASI (ADMIN): " + e.message);
   }
 }
 
@@ -731,12 +774,12 @@ function enterEmployeeApp() {
     buildEmployeeSB();
     nav('kpi');
   } catch(e) {
-    alert("GAGAL MEMUAT APLIKASI (KARYAWAN): " + e.message);
+    sysErr("GAGAL MEMUAT APLIKASI (KARYAWAN): " + e.message);
   }
 }
 
 function buildEmployeeSB() {
-  const nm  = S.user?.name || 'Karyawan';
+  const nm  = (S.user && S.user.name) ? S.user.name : 'Karyawan';
   const ini = nm.charAt(0).toUpperCase();
   q('sbAv').textContent   = ini;  q('sbName').textContent = nm;
   q('sbRole').textContent = 'Karyawan';
@@ -767,16 +810,19 @@ async function renderMyResults(pc) {
       
     if (error) throw error;
       
-    if(!data?.length){
+    if(!data || !data.length){
       q('myResWrap').innerHTML='<div class="empty"><span class="ei">◎</span><p>Belum ada hasil evaluasi.</p></div>';
       return;
     }
-    q('myResWrap').innerHTML=data.map(s=>`
+    q('myResWrap').innerHTML=data.map(s=>{
+      const objName = (s.kpi_objectives && s.kpi_objectives.name) ? s.kpi_objectives.name : '-';
+      const perLabel = (s.kpi_periods && s.kpi_periods.label) ? s.kpi_periods.label : '-';
+      return `
       <div class="card" style="margin-bottom:12px;">
         <div class="card-h">
           <div>
-            <div style="font-weight:800;">${esc(s.kpi_objectives?.name||'-')}</div>
-            <div style="font-size:.76rem;color:var(--muted);">${esc(s.kpi_periods?.label||'-')} &middot; ${new Date(s.submitted_at).toLocaleDateString('id-ID')}</div>
+            <div style="font-weight:800;">${esc(objName)}</div>
+            <div style="font-size:.76rem;color:var(--muted);">${esc(perLabel)} &middot; ${new Date(s.submitted_at).toLocaleDateString('id-ID')}</div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="text-align:center;">
@@ -786,7 +832,8 @@ async function renderMyResults(pc) {
             <button class="btn btn-b btn-sm" onclick="downloadMyPdf('${s.id}')">&#8595; Unduh PDF</button>
           </div>
         </div>
-      </div>`).join('');
+      </div>`
+    }).join('');
   } catch(e){
     q('myResWrap').innerHTML=`<div class="alert ae">Gagal memuat: ${esc(e.message)}</div>`;
   }
@@ -802,7 +849,12 @@ async function downloadMyPdf(submissionId) {
     ]);
     const s=sR.data,krs=krR.data||[],evis=evR.data||[];
     const emp=S.user,d=new Date(s.submitted_at),dt=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-    const sfLabel=s.kpi_objectives?.mode==='SCALE5'?(s.sf_result||0).toFixed(2)+' / 5':String(s.sf_result||0);
+    const objMode = (s.kpi_objectives && s.kpi_objectives.mode) ? s.kpi_objectives.mode : '';
+    const objName = (s.kpi_objectives && s.kpi_objectives.name) ? s.kpi_objectives.name : '-';
+    const perLabel = (s.kpi_periods && s.kpi_periods.label) ? s.kpi_periods.label : '-';
+    const empName = emp && emp.name ? emp.name : '-';
+    
+    const sfLabel=objMode==='SCALE5'?(s.sf_result||0).toFixed(2)+' / 5':String(s.sf_result||0);
     const rows=krs.map(v=>`<tr><td>${esc(v.kr_name||'-')}</td><td>${v.kr_target||0} ${v.kr_unit||''}</td><td>${v.real_value||0}</td><td>${v.kr_weight||0}%</td><td style="font-weight:800;">${(v.score_part||0).toFixed(2)}</td></tr>`).join('');
     const eviHtml=evis.map(e=>e.file_type==='image'&&e.file_data?`<img src="${e.file_data}" style="max-height:300px;width:100%;object-fit:contain;border:1px solid #e8ecf0;border-radius:8px;"/>`:'').join('');
     const sigHtml=s.signature_data?`<img src="${s.signature_data}" style="height:64px;width:auto;object-fit:contain;display:block;margin:0 auto;"/>`:'';
@@ -811,15 +863,15 @@ async function downloadMyPdf(submissionId) {
     tmp.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #1a56db;padding-bottom:14px;margin-bottom:20px;">
         <div><div style="font-size:14px;font-weight:900;color:#1a56db;text-transform:uppercase;">Bukti Penilaian KPI</div>
-          <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:3px;">${esc(s.kpi_periods?.label||'-')}</div></div>
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:3px;">${esc(perLabel)}</div></div>
         <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px 20px;text-align:center;">
           <div style="font-size:36px;font-weight:900;color:#15803d;line-height:1;">${sfLabel}</div>
           <div style="font-size:10px;font-weight:800;color:#94a3b8;">SKOR AKHIR</div>
         </div>
       </div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-        <tr><td style="color:#94a3b8;width:100px;padding:3px 0;font-size:12px;">Nama</td><td style="font-weight:700;font-size:12px;">${esc(emp.name||'-')}</td></tr>
-        <tr><td style="color:#94a3b8;padding:3px 0;font-size:12px;">KPI</td><td style="color:#1a56db;font-weight:800;font-size:12px;">${esc(s.kpi_objectives?.name||'-')}</td></tr>
+        <tr><td style="color:#94a3b8;width:100px;padding:3px 0;font-size:12px;">Nama</td><td style="font-weight:700;font-size:12px;">${esc(empName)}</td></tr>
+        <tr><td style="color:#94a3b8;padding:3px 0;font-size:12px;">KPI</td><td style="color:#1a56db;font-weight:800;font-size:12px;">${esc(objName)}</td></tr>
       </table>
       <h6 style="font-weight:900;border-bottom:2px solid #e8ecf0;padding-bottom:8px;margin:0 0 10px;font-size:12px;">Rincian Key Results</h6>
       <table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -836,7 +888,7 @@ async function downloadMyPdf(submissionId) {
         <p style="margin-bottom:8px;font-size:12px;">Jakarta, ${dt}</p>
         <p style="font-size:11px;margin-bottom:8px;">Yang Membuat,</p>
         ${sigHtml}
-        <div style="font-weight:900;text-decoration:underline;text-transform:uppercase;margin-top:7px;font-size:12px;">${esc(emp.name||'-')}</div>
+        <div style="font-weight:900;text-decoration:underline;text-transform:uppercase;margin-top:7px;font-size:12px;">${esc(empName)}</div>
       </div>`;
     document.body.appendChild(tmp);
     const c=await html2canvas(tmp,{scale:2,backgroundColor:'#fff',useCORS:true});
@@ -845,8 +897,8 @@ async function downloadMyPdf(submissionId) {
     if(!jsPDF)throw new Error('jsPDF tidak tersedia.');
     const t=new jsPDF('p','mm','a4'),pr=t.getImageProperties(img);
     const pw=210,iw=pw,ih=(pr.height*iw)/pr.width;
-    if(ih<=297){const p=new jsPDF('p','mm',[pw,ih]);p.addImage(img,'JPEG',0,0,iw,ih);p.save(sfn('KPI_'+emp.name)+'.pdf');}
-    else{const p=new jsPDF('p','mm','a4');let hl=ih,pos=0;p.addImage(img,'JPEG',0,pos,iw,ih);hl-=297;while(hl>0){pos-=297;p.addPage();p.addImage(img,'JPEG',0,pos,iw,ih);hl-=297;}p.save(sfn('KPI_'+emp.name)+'.pdf');}
+    if(ih<=297){const p=new jsPDF('p','mm',[pw,ih]);p.addImage(img,'JPEG',0,0,iw,ih);p.save(sfn('KPI_'+empName)+'.pdf');}
+    else{const p=new jsPDF('p','mm','a4');let hl=ih,pos=0;p.addImage(img,'JPEG',0,pos,iw,ih);hl-=297;while(hl>0){pos-=297;p.addPage();p.addImage(img,'JPEG',0,pos,iw,ih);hl-=297;}p.save(sfn('KPI_'+empName)+'.pdf');}
   }catch(e){alert('Gagal unduh PDF: '+e.message);}finally{ldr();}
 }
 
@@ -865,8 +917,8 @@ function doLogout() {
    SIDEBAR
 ============================================================ */
 function buildSB() {
-  const isAdm = S.user?.role === 'master_admin';
-  const nm  = S.user?.name || S.user?.email || 'User';
+  const isAdm = (S.user && S.user.role === 'master_admin');
+  const nm  = (S.user && S.user.name) ? S.user.name : ((S.user && S.user.email) ? S.user.email : 'User');
   const ini = nm.charAt(0).toUpperCase();
   q('sbAv').textContent  = ini;  q('sbName').textContent = nm;
   q('sbRole').textContent= isAdm ? 'Master Admin' : 'User';
@@ -904,7 +956,10 @@ const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', 
 function nav(page) {
   try {
     q('pgTitle').textContent = PG[page] || page;
-    document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('on', b.dataset.pg===page));
+    document.querySelectorAll('.sb-item').forEach(b => {
+      if (b.dataset.pg === page) b.classList.add('on');
+      else b.classList.remove('on');
+    });
     window.scrollTo(0,0);
     const pc = q('pgC');
     if(page==='dashboard')       renderDash(pc);
@@ -916,7 +971,7 @@ function nav(page) {
     else if(page==='adminUsers') renderAdminUsers(pc);
     else if(page==='adminMenus') renderAdminMenus(pc);
   } catch(e) {
-    alert("Navigasi Error: " + e.message);
+    sysErr("Navigasi Error: " + e.message);
   }
 }
 
@@ -930,7 +985,7 @@ function swLT(tab, el) {
   q('lp' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('on');
 }
 function renderAccList(items) {
-  if(!items.length) return '<p style="font-size:.75rem;color:var(--muted);text-align:center;padding:10px;">Belum ada konten.</p>';
+  if(!items || !items.length) return '<p style="font-size:.75rem;color:var(--muted);text-align:center;padding:10px;">Belum ada konten.</p>';
   return items.map(m=>`<div class="acc"><button class="acc-btn" onclick="this.closest('.acc').classList.toggle('open')">${esc(m.title)}<span class="acc-ico">&#9660;</span></button><div class="acc-body">${m.content||''}</div></div>`).join('');
 }
 async function loadLandMenus() {
@@ -1012,7 +1067,7 @@ async function renderDash(pc) {
     renderDashRows(S._dashAll);
   }catch(e){
     q('dStatEmpty').style.display='none';
-    q('dashStatusPane').innerHTML = `<div class="alert ae" style="margin:16px;"><b>Error Database:</b> ${esc(e.message)}<br/>Bisa jadi alias relasi tabel di Supabase tidak sesuai.</div>`;
+    q('dashStatusPane').innerHTML = `<div class="alert ae" style="margin:16px;"><b>Error Database Dashboard:</b> ${esc(e.message)}</div>`;
   }
   finally{ldr();}
 }
@@ -1042,7 +1097,11 @@ function renderDashStatus(list){
 }
 function filterDash(){
   const q2=val('dSrch').toLowerCase(),pf=val('dPFil');
-  renderDashRows(S._dashAll.filter(s=>(!q2||(s.employees?.name||'').toLowerCase().includes(q2))&&(!pf||s.kpi_periods?.label===pf)));
+  renderDashRows(S._dashAll.filter(s=>{
+    const eName = (s.employees && s.employees.name) ? s.employees.name : ((s.emp && s.emp.name) ? s.emp.name : '');
+    const pLabel = (s.kpi_periods && s.kpi_periods.label) ? s.kpi_periods.label : ((s.period && s.period.label) ? s.period.label : '');
+    return (!q2||eName.toLowerCase().includes(q2)) && (!pf||pLabel===pf);
+  }));
 }
 function renderDashRows(list){
   const tb=q('dBody'),em=q('dEm');
@@ -1050,11 +1109,14 @@ function renderDashRows(list){
   if(em)em.style.display='none';
   tb.innerHTML=list.map((s,i)=>{
     const sf=s.sf_result,sc=sf>=110?'bg':sf>=100?'bb':sf>=90?'bo':'br';
+    const empName = (s.employees && s.employees.name) ? s.employees.name : ((s.emp && s.emp.name) ? s.emp.name : '-');
+    const objName = (s.kpi_objectives && s.kpi_objectives.name) ? s.kpi_objectives.name : ((s.obj && s.obj.name) ? s.obj.name : '-');
+    const perLabel = (s.kpi_periods && s.kpi_periods.label) ? s.kpi_periods.label : ((s.period && s.period.label) ? s.period.label : '-');
     return`<tr>
       <td style="color:var(--muted);font-size:.76rem;">${i+1}</td>
-      <td style="font-weight:700;">${esc(s.employees?.name||'-')}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.kpi_objectives?.name||'-')}</td>
-      <td><span class="badge bgr">${esc(s.kpi_periods?.label||'-')}</span></td>
+      <td style="font-weight:700;">${esc(empName)}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(objName)}</td>
+      <td><span class="badge bgr">${esc(perLabel)}</span></td>
       <td style="font-weight:700;">${(s.sum_score||0).toFixed(2)}</td>
       <td><span class="badge ${sc}">${sf||0}</span></td>
       <td style="font-size:.76rem;color:var(--muted);">${new Date(s.submitted_at).toLocaleString('id-ID')}</td>
@@ -1070,10 +1132,10 @@ async function viewDetail(id){
       SB.from('kpi_submission_kr_values').select('*').eq('submission_id',id),
       SB.from('submission_evidence').select('*').eq('submission_id',id).order('sort_order')
     ]);
-    if(kR.data?.length) krH=`<h6 style="font-weight:800;margin:14px 0 8px;font-size:.82rem;">Rincian Key Results</h6>
+    if(kR.data && kR.data.length) krH=`<h6 style="font-weight:800;margin:14px 0 8px;font-size:.82rem;">Rincian Key Results</h6>
       <div class="tw"><table class="rpt-tbl"><thead><tr><th style="text-align:left;">KR</th><th>Target</th><th>Realisasi</th><th>Bobot</th><th>Skor</th></tr></thead>
       <tbody>${kR.data.map(v=>`<tr><td style="text-align:left;">${esc(v.kr_name||'-')}</td><td>${v.kr_target||0} ${v.kr_unit||''}</td><td>${v.real_value||0}</td><td>${v.kr_weight||0}%</td><td style="font-weight:800;">${(v.score_part||0).toFixed(2)}</td></tr>`).join('')}</tbody></table></div>`;
-    if(eR.data?.length){
+    if(eR.data && eR.data.length){
       evH='<h6 style="font-weight:800;margin:14px 0 8px;font-size:.82rem;">Lampiran Bukti</h6>';
       eR.data.forEach((e,i)=>{
         evH+=`<div style="margin-bottom:10px;"><div style="font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:4px;">Bukti ${i+1}: ${esc(e.file_name||'')}</div>`;
@@ -1085,12 +1147,18 @@ async function viewDetail(id){
   }catch(e){
     evH = `<div class="alert ae">Error Detail: ${esc(e.message)}</div>`;
   }
+  
+  const empName = (s.employees && s.employees.name) ? s.employees.name : ((s.emp && s.emp.name) ? s.emp.name : '-');
+  const empTitle = (s.employees && s.employees.title) ? s.employees.title : ((s.emp && s.emp.title) ? s.emp.title : '-');
+  const objName = (s.kpi_objectives && s.kpi_objectives.name) ? s.kpi_objectives.name : ((s.obj && s.obj.name) ? s.obj.name : '-');
+  const perLabel = (s.kpi_periods && s.kpi_periods.label) ? s.kpi_periods.label : ((s.period && s.period.label) ? s.period.label : '-');
+    
   q('mDB').innerHTML=`
     <table class="rpt-meta" style="margin-bottom:12px;width:100%;border-collapse:collapse;">
-      <tr><td>Karyawan</td><td style="font-weight:700;">${esc(s.employees?.name||'-')}</td></tr>
-      <tr><td>Jabatan</td><td>${esc(s.employees?.title||'-')}</td></tr>
-      <tr><td>Objective</td><td style="color:var(--blue);font-weight:800;">${esc(s.kpi_objectives?.name||'-')}</td></tr>
-      <tr><td>Periode</td><td>${esc(s.kpi_periods?.label||'-')}</td></tr>
+      <tr><td>Karyawan</td><td style="font-weight:700;">${esc(empName)}</td></tr>
+      <tr><td>Jabatan</td><td>${esc(empTitle)}</td></tr>
+      <tr><td>Objective</td><td style="color:var(--blue);font-weight:800;">${esc(objName)}</td></tr>
+      <tr><td>Periode</td><td>${esc(perLabel)}</td></tr>
       <tr><td>Total Skor</td><td style="font-weight:900;">${(s.sum_score||0).toFixed(2)}</td></tr>
       <tr><td>Skor Akhir (SF)</td><td style="font-weight:900;font-size:1.4rem;color:var(--green-d);">${s.sf_result||0}</td></tr>
       <tr><td>Catatan</td><td>${esc(s.evidence_notes||'-')}</td></tr>
@@ -1164,10 +1232,9 @@ async function renderKpiForm(pc){
   if(!dbOk){q('kW').innerHTML=`<div class="card"><div class="card-b"><div class="alert aw">Konfigurasi database dahulu!.</div></div></div>`;return;}
   ldr('Memuat data...');
   try {
-    const isEmp = S.user?.role === 'employee';
+    const isEmp = S.user && S.user.role === 'employee';
     let empQuery = SB.from('employees').select('*').eq('is_active', true);
     
-    // PERBAIKAN: Jika yang login Karyawan, JANGAN tampilkan semua nama. Hanya dirinya sendiri.
     if (isEmp) empQuery = empQuery.eq('id', S.user.id);
     else empQuery = empQuery.order('name');
     
@@ -1181,22 +1248,22 @@ async function renderKpiForm(pc){
     eS.innerHTML='<option value="">-- Pilih Karyawan --</option>';
     (eR.data||[]).forEach(e=>{S._empMap[e.id]=e;eS.add(new Option(e.name,e.id));});
     
-    if (isEmp && eR.data?.length > 0) {
+    if (isEmp && eR.data && eR.data.length > 0) {
       eS.value = S.user.id;
-      eS.disabled = true; // Kunci pilihan ke namanya sendiri
+      eS.disabled = true;
       onKEmp();
     }
     
     const pS=q('kPer'); pS.innerHTML='<option value="">-- Pilih Tahun --</option>';
     (pR.data||[]).forEach(p=>pS.add(new Option(p.label,p.id)));
   }catch(e){
-    q('kW').innerHTML=`<div class="alert ae"><b>Error:</b> ${esc(e.message)}</div>`;
+    q('kW').innerHTML=`<div class="alert ae"><b>Error Karyawan:</b> ${esc(e.message)}</div>`;
   }
   finally{
     ldr();
   }
 }
-function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e?.nik||''; q('kJab').value=e?.title||''; q('kLok').value=e?.location||''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
+function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e&&e.nik?e.nik:''; q('kJab').value=e&&e.title?e.title:''; q('kLok').value=e&&e.location?e.location:''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
 function onKPer(){ q('kOC').style.display='none'; q('kKS').style.display='none'; if(val('kEmp')) loadKObjs(); }
 async function loadKObjs(){
   const eid=val('kEmp'),pid=val('kPer'); if(!eid||!pid)return;
@@ -1243,7 +1310,8 @@ function calcScore(){
   if(!obj||!krs.length)return null;
   const mode=obj.mode; let sum=0,tot=0;
   const det=krs.map((k,i)=>{
-    const rv=parseFloat(q('kr_'+i)?.value)||0,wKR=k.relative_weight,ratio=k.target?rv/k.target:0;
+    const rvEl=q('kr_'+i);
+    const rv=parseFloat(rvEl?rvEl.value:'')||0,wKR=k.relative_weight,ratio=k.target?rv/k.target:0;
     const sp=mode==='CAP100'?Math.min(ratio,1)*wKR:ratio*wKR,scp=isFinite(sp)?sp:0;
     sum+=scp;tot+=isFinite(wKR)?wKR:0;return{k,rv,target:k.target,wKR,sp:scp};
   });
@@ -1273,8 +1341,8 @@ async function calcPreview(){
   const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj');
   
   const noteEl = q('kNoteEditor');
-  const note = (noteEl?.innerText || '').trim();
-  const noteHtml = noteEl?.innerHTML || '';
+  const note = noteEl ? noteEl.innerText.trim() : '';
+  const noteHtml = noteEl ? noteEl.innerHTML : '';
   
   const eviF=q('kEF').files[0],ttdF=q('kTF').files[0];
   setA('kFA','');
@@ -1282,7 +1350,9 @@ async function calcPreview(){
   if(!oid)return setA('kFA','Pilih objective.');if(!note)return setA('kFA','Catatan wajib diisi.');
   if(!eviF)return setA('kFA','Upload bukti pendukung.');if(!ttdF)return setA('kFA','Upload tanda tangan.');
   const res=calcScore();if(!res)return setA('kFA','Gagal menghitung skor.');
-  const emp=S._empMap[eid],obj=S._kpiObjs.find(o=>o.id===oid),pLabel=q('kPer').options[q('kPer').selectedIndex]?.text;
+  const emp=S._empMap[eid],obj=S._kpiObjs.find(o=>o.id===oid);
+  const pSel = q('kPer');
+  const pLabel= pSel.options[pSel.selectedIndex] ? pSel.options[pSel.selectedIndex].text : '';
   S.kpiSt={emp,obj,periodId:pid,periodLabel:pLabel,note,noteHtml,eviFile:eviF,ttdFile:ttdF,...res,savedToDb:false};
   buildRpt();
   q('pgTitle').textContent='Hasil KPI';
@@ -1353,16 +1423,16 @@ async function saveToDB(){
   if(!dbOk){alert('Konfigurasi database dahulu!');return;}
   ldr('Menyimpan semua data...');
   try{
-    const sid=crypto.randomUUID();
-    const isEmp=S.user?.role==='employee';
+    const sid=genUUID(); // Fix: Menggunakan custom genUUID untuk bypass blokir file lokal
+    const isEmp=S.user && S.user.role==='employee';
     const eviB64=await fileToB64(st.eviFile),ttdB64=await fileToB64(st.ttdFile),eviType=isPdf(st.eviFile)?'pdf':'image';
     const{error:sE}=await SB.from('kpi_submissions').insert({
       id:sid,
       employee_id:st.emp.id,
       objective_id:st.obj.id,
       period_id:st.periodId,
-      submitted_by_user:isEmp?null:S.user?.id,
-      submitted_by_emp:isEmp?S.user?.id:null,
+      submitted_by_user:isEmp?null:S.user.id,
+      submitted_by_emp:isEmp?S.user.id:null,
       sum_score:st.sum,
       sf_result:st.sfv,
       evidence_notes:st.noteHtml||st.note,
@@ -1371,7 +1441,7 @@ async function saveToDB(){
       signature_filename:st.ttdFile.name
     });
     if(sE)throw sE;
-    if(st.det?.length){
+    if(st.det && st.det.length){
       const{error:kE}=await SB.from('kpi_submission_kr_values').insert(st.det.map(d=>({submission_id:sid,kr_id:d.k.id,kr_name:d.k.kr_name,kr_target:d.target,kr_unit:d.k.unit,kr_weight:d.k.relative_weight,real_value:d.rv,score_part:d.sp})));
       if(kE)throw kE;
     }
@@ -1512,7 +1582,8 @@ async function saveObj(){
   const eid=q('mObj').dataset.eid,name=val('mON').trim(),formula=val('mOF').trim(),mode=val('mOM'),pid=val('mOP');
   setA('mOA','');
   if(!name||!pid) return setA('mOA','Nama KPI dan periode wajib diisi.');
-  const krs=[...(q('mOKR')?.querySelectorAll('.kr-row')||[])].map((r,i)=>({
+  const krNodes = q('mOKR') ? q('mOKR').querySelectorAll('.kr-row') : [];
+  const krs=[...krNodes].map((r,i)=>({
     kr_name:r.querySelector('[data-f="n"]').value.trim(),
     target:parseFloat(r.querySelector('[data-f="t"]')?.value)||0,
     unit:r.querySelector('[data-f="u"]')?.value||'',
@@ -1521,7 +1592,8 @@ async function saveObj(){
   }));
   if(krs.some(k=>!k.kr_name)) return setA('mOA','Nama Key Result tidak boleh kosong.');
   if(!krs.length) return setA('mOA','Minimal 1 Key Result.');
-  const checkedEmps=[...q('mOEmpList').querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.value);
+  const empNodes = q('mOEmpList') ? q('mOEmpList').querySelectorAll('input[type=checkbox]:checked') : [];
+  const checkedEmps=[...empNodes].map(cb=>cb.value);
   try{
     ldr('Menyimpan KPI...');
     let objId=eid;
@@ -1545,12 +1617,25 @@ async function delO(id){if(!confirm('Hapus objective ini?'))return;try{await SB.
 let _wOid='';
 async function openMW(oid,nm){_wOid=oid;q('mWT').textContent='Bobot: '+nm;setA('mWA','');q('mWR').innerHTML='';
   try{const[eR,wR]=await Promise.all([SB.from('employees').select('*').eq('is_active',true).order('name'),SB.from('employee_kpi_weights').select('*').eq('objective_id',oid)]);
-    const wMap=Object.fromEntries((wR.data||[]).map(w=>[w.user_id,w.weight]));
-    q('mWR').innerHTML=(eR.data||[]).map(e=>`<div class="w-row"><span>${esc(e.name)}</span><input type="number" value="${wMap[e.id]??0}" min="0" max="100" step=".5" data-emp="${e.id}" oninput="updWT()"/></div>`).join('');
+    const wMap={};
+    if (wR.data) wR.data.forEach(w => wMap[w.user_id] = w.weight);
+    if (eR.data) {
+      q('mWR').innerHTML=eR.data.map(e=>`<div class="w-row"><span>${esc(e.name)}</span><input type="number" value="${wMap[e.id]??0}" min="0" max="100" step=".5" data-emp="${e.id}" oninput="updWT()"/></div>`).join('');
+    }
     updWT();openM('mWeights');}catch(e){alert(e.message);}
 }
-function updWT(){const t=[...(q('mWR')?.querySelectorAll('input[data-emp]')||[])].reduce((s,i)=>s+(parseFloat(i.value)||0),0);const el=q('mWTot');el.textContent=t.toFixed(1);el.style.color=Math.abs(t-100)<.01?'var(--green-d)':'var(--blue)';}
-async function saveWeights(){const inp=[...q('mWR').querySelectorAll('input[data-emp]')],ent=inp.map(i=>({user_id:i.dataset.emp,objective_id:_wOid,weight:parseFloat(i.value)||0}));
+function updWT(){
+  const inpNodes = q('mWR') ? q('mWR').querySelectorAll('input[data-emp]') : [];
+  const t=[...inpNodes].reduce((s,i)=>s+(parseFloat(i.value)||0),0);
+  const el=q('mWTot');
+  if (el) {
+    el.textContent=t.toFixed(1);
+    el.style.color=Math.abs(t-100)<.01?'var(--green-d)':'var(--blue)';
+  }
+}
+async function saveWeights(){
+  const inpNodes = q('mWR') ? q('mWR').querySelectorAll('input[data-emp]') : [];
+  const ent=[...inpNodes].map(i=>({user_id:i.dataset.emp,objective_id:_wOid,weight:parseFloat(i.value)||0}));
   try{ldr('Menyimpan...');await SB.from('employee_kpi_weights').delete().eq('objective_id',_wOid);if(ent.length)await SB.from('employee_kpi_weights').insert(ent);closeM('mWeights');}catch(e){setA('mWA',esc(e.message));}finally{ldr();}}
 
 /* ============================================================
@@ -1569,7 +1654,7 @@ async function loadEmps(){if(!dbOk)return;ldr();
 }
 function openME(){
   q('mET').textContent='Tambah Karyawan'; q('mEId').value='';
-  ['mEN','mENik','mEJ','mEL','mEUser','mEPw'].forEach(id=>q(id)&&(q(id).value=''));
+  ['mEN','mENik','mEJ','mEL','mEUser','mEPw'].forEach(id=>{ if(q(id)) q(id).value=''; });
   q('mES').value='true'; q('mEPH').textContent='*'; q('mEPwNote').textContent='';
   setA('mEA',''); openM('mEmp');
 }
@@ -1646,7 +1731,7 @@ async function saveUser(){
   }catch(e){setA('mUA',esc(e.message));}finally{ldr();}
 }
 async function delU(id){
-  if(id===S.user?.id){alert('Tidak bisa menghapus akun yang sedang aktif.');return;}
+  if(S.user && id===S.user.id){alert('Tidak bisa menghapus akun yang sedang aktif.');return;}
   if(!confirm('Hapus user ini?'))return;
   try{await SB.from('users').delete().eq('id',id);loadUsers();}catch(e){alert(e.message);}}
 
