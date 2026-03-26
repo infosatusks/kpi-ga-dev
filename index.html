@@ -136,7 +136,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .fc,.fs{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);font-family:inherit;font-size:.855rem;outline:none;transition:.15s;}
 .fc:focus,.fs:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
 textarea.fc{resize:vertical;min-height:80px;}
-.fc[readonly]{background:var(--slate-lt);color:var(--slate);}
+.fc[readonly], .fs[disabled]{background:var(--slate-lt);color:var(--slate);cursor:not-allowed;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
 @media(max-width:640px){.row2,.row3{grid-template-columns:1fr;}}
@@ -260,8 +260,14 @@ textarea.fc{resize:vertical;min-height:80px;}
 .empty .ei{font-size:2.2rem;display:block;margin-bottom:10px;opacity:.25;}
 .pw-wrap{position:relative;}
 .tg-pw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:.85rem;}
-@media(max-width:768px){.sidebar{transform:translateX(-100%);}
-.sidebar.mob{transform:translateX(0);}.main{margin-left:0!important;}.pw{padding:16px;}.stats{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.mob{transform:translateX(0);}
+  .main{margin-left:0!important;}
+  .pw{padding:16px;}
+  .stats{grid-template-columns:1fr 1fr;}
+  #mobBtn { display: flex !important; }
+}
 </style>
 </head>
 <body>
@@ -270,17 +276,17 @@ textarea.fc{resize:vertical;min-height:80px;}
 <div class="loader" id="loader"><div class="spin"></div><span class="ltxt" id="ltxt">Memuat...</span></div>
 
 <!-- ============================================================ LANDING ============================================================ -->
-<div id="pgLanding" style="display:flex;height:100vh;overflow:hidden;">
+<div id="pgLanding" class="on">
   <div class="ll">
-    <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;onerror=this.style.display='none'"/></div>
+    <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;" onerror="this.style.display='none'"/></div>
     <div class="ll-form">
       <div class="ll-welcome">
         <h1>Selamat Datang</h1>
         <p>Masuk dengan akun yang telah diberikan oleh administrator.</p>
       </div>
       <div id="landAlert"></div>
-      <div class="lf-g"><label class="lf-l">Email / Username</label>
-        <input class="lf-i" type="text" id="liUser" placeholder="Masukkan email Anda" autocomplete="email"/></div>
+      <div class="lf-g"><label class="lf-l">Username</label>
+        <input class="lf-i" type="text" id="liUser" placeholder="Masukkan username Anda" autocomplete="username"/></div>
       <div class="lf-g"><label class="lf-l">Password</label>
         <div class="lf-pw">
           <input class="lf-i" type="password" id="liPwd" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -379,10 +385,10 @@ textarea.fc{resize:vertical;min-height:80px;}
 </div>
 
 <!-- ============================================================ APP SHELL ============================================================ -->
-<div id="appShell" style="display:none;">
+<div id="appShell">
   <nav class="sidebar" id="sidebar">
     <div class="sb-hd">
-      <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;onerror=this.style.display='none'"/>
+      <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;" onerror="this.style.display='none'"/>
       <span class="sb-brand">KPI Evaluasi</span>
       <button class="sb-tog" id="sbTog" onclick="togSB()">&#171;</button>
     </div>
@@ -504,7 +510,7 @@ textarea.fc{resize:vertical;min-height:80px;}
     <div class="sep"></div>
     <p style="font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:10px;">&#128274; Akun Login Karyawan</p>
     <div class="row2">
-      <div class="fg"><label class="fl">Username <span class="req">*</span></label><input class="fc" id="mEEmail" placeholder="e.g. budi.santoso"/></div>
+      <div class="fg"><label class="fl">Username <span class="req">*</span></label><input class="fc" type="text" id="mEUser" placeholder="e.g. budi.santoso"/></div>
       <div class="fg"><label class="fl">Password <span id="mEPH" class="req">*</span></label>
         <div class="pw-wrap">
           <input class="fc" type="password" id="mEPw" placeholder="Min. 4 karakter" style="padding-right:36px;"/>
@@ -528,7 +534,7 @@ textarea.fc{resize:vertical;min-height:80px;}
     <div id="mUA"></div>
     <div class="row2">
       <div class="fg"><label class="fl">Nama Lengkap <span class="req">*</span></label><input class="fc" id="mUName"/></div>
-      <div class="fg"><label class="fl">Email <span class="req">*</span></label><input class="fc" type="email" id="mUEmail"/></div>
+      <div class="fg"><label class="fl">Username <span class="req">*</span></label><input class="fc" type="text" id="mUUser" placeholder="Masukkan username"/></div>
     </div>
     <div class="row2">
       <div class="fg"><label class="fl">Role <span class="req">*</span></label>
@@ -589,25 +595,16 @@ textarea.fc{resize:vertical;min-height:80px;}
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-/* Global error handler */
 window.onerror = function(msg, src, line, col) {
   if(src && src.includes('content.js')) return false;
-  const box = document.createElement('div');
-  box.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#fef2f2;border:2px solid #ef4444;border-radius:10px;padding:14px 16px;z-index:99999;font-family:monospace;font-size:12px;color:#b91c1c;cursor:pointer;';
-  box.innerHTML = `<b>Error (klik untuk tutup):</b><br>${msg}<br><small>Line ${line}</small>`;
-  box.onclick = () => box.remove();
-  document.body.appendChild(box);
+  alert(`🔴 SYSTEM ERROR:\n${msg}\nLine: ${line}\nSource: ${src}`);
   return false;
 };
 window.onunhandledrejection = function(e) {
   if(!e.reason) return;
   const msg = e.reason?.message || String(e.reason);
   if(msg.includes('content.js')) return;
-  const box = document.createElement('div');
-  box.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px;z-index:99999;font-family:monospace;font-size:12px;color:#92400e;cursor:pointer;';
-  box.innerHTML = `<b>Async Error (klik tutup):</b><br>${msg}`;
-  box.onclick = () => box.remove();
-  document.body.appendChild(box);
+  alert(`🟠 ASYNC ERROR:\n${msg}`);
 };
 
 const CFG = {
@@ -665,7 +662,7 @@ let _memSession = null;
 function saveSession(user) {
   _memSession = user;
   try {
-    if (q('liRemember').checked) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    if (q('liRemember')?.checked) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
     else sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
   } catch(_) { }
 }
@@ -683,56 +680,59 @@ function clearSession() {
 }
 
 async function doLogin() {
+  const loginField = q('liUser');
+  const username = loginField ? loginField.value.trim() : '';
+  const pwd = val('liPwd');
+  
+  if (!dbOk) { setA('landAlert','Database belum terhubung.','w'); return; }
+  if (!username||!pwd) { setA('landAlert','Username dan password wajib diisi.'); return; }
+  
+  setA('landAlert','');
+  const btn = q('btnLogin'); btn.disabled = true; btn.innerHTML = '⏳ Masuk...';
+  
   try {
-    var loginField = document.getElementById('liUser') || document.getElementById('liEmail');
-    var email = loginField ? loginField.value.trim() : '';
-    var pwd = document.getElementById('liPwd') ? document.getElementById('liPwd').value : '';
-    if (!dbOk) { alert('dbOk false!'); return; }
-    if (!email||!pwd) { alert('kosong'); return; }
-    var btn = document.getElementById('btnLogin');
-    if(btn){ btn.disabled=true; btn.textContent='...'; }
-    var result = await SB.rpc('fn_login', {p_email:email, p_password:pwd});
-    if(result.error) throw result.error;
-    if(!result.data||!result.data.length) throw new Error('Data kosong');
-    var raw = result.data[0];
-    var user = {id:raw.out_id,name:raw.out_name,email:raw.out_email,role:raw.out_role,is_active:raw.out_is_active};
+    const { data, error } = await SB.rpc('fn_login', { p_email: username, p_password: pwd });
+    
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('Login gagal, user tidak ditemukan / password salah.');
+    
+    const raw = data[0];
+    const user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active, source:raw.out_source };
+    
+    if (!user.is_active) throw new Error('Akun Anda dinonaktifkan. Hubungi administrator.');
+    
     S.user = user;
+    saveSession(user);
+    if (user.role === 'employee') { enterEmployeeApp(); } else { enterApp(); }
     
-    // Debug enterApp inline
-    alert('LOGIN OK - role=' + user.role + '. Akan hide landing...');
-    var land = document.getElementById('pgLanding');
-    var app = document.getElementById('appShell');
-    alert('land=' + (land?land.tagName:'NULL') + ' app=' + (app?app.tagName:'NULL'));
-    land.style.display = 'none';
-    app.style.display = 'flex';
-    app.style.width = '100%';
-    app.style.minHeight = '100vh';
-    alert('display set. land.display=' + land.style.display + ' app.display=' + app.style.display);
-    buildSB();
-    alert('buildSB done');
-    nav('dashboard');
-    alert('nav done - should see dashboard now');
-    
-  } catch(ex) {
-    alert('ERROR: ' + ex.message);
-    var btn2 = document.getElementById('btnLogin');
-    if(btn2){ btn2.disabled=false; btn2.textContent='Masuk'; }
+  } catch(e) {
+    setA('landAlert', esc(e.message));
+  } finally {
+    btn.disabled = false; btn.innerHTML = 'Masuk';
   }
 }
 
 function enterApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
-  buildSB();
-  nav('dashboard');
-  if(dbOk) try{ loadLandMenus(); }catch(_){}
+  try {
+    q('pgLanding').classList.remove('on');
+    q('appShell').classList.add('on');
+    buildSB();
+    nav('dashboard');
+    if(dbOk) loadLandMenus();
+  } catch(e) {
+    alert("GAGAL MEMUAT APLIKASI (ADMIN): " + e.message);
+  }
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
-  buildEmployeeSB();
-  nav('kpi');
+  try {
+    q('pgLanding').classList.remove('on');
+    q('appShell').classList.add('on');
+    buildEmployeeSB();
+    nav('kpi');
+  } catch(e) {
+    alert("GAGAL MEMUAT APLIKASI (KARYAWAN): " + e.message);
+  }
 }
 
 function buildEmployeeSB() {
@@ -760,10 +760,13 @@ async function renderMyResults(pc) {
     <div id="myResWrap"><div class="empty"><p>Memuat...</p></div></div>`;
   if(!dbOk) return;
   try {
-    const{data}=await SB.from('kpi_submissions')
-      .select('*, obj:objective_id(name), period:period_id(label)')
+    const{data, error}=await SB.from('kpi_submissions')
+      .select('*, kpi_objectives(name), kpi_periods(label)')
       .eq('employee_id', S.user.id)
       .order('submitted_at',{ascending:false});
+      
+    if (error) throw error;
+      
     if(!data?.length){
       q('myResWrap').innerHTML='<div class="empty"><span class="ei">◎</span><p>Belum ada hasil evaluasi.</p></div>';
       return;
@@ -772,8 +775,8 @@ async function renderMyResults(pc) {
       <div class="card" style="margin-bottom:12px;">
         <div class="card-h">
           <div>
-            <div style="font-weight:800;">${esc(s.obj?.name||'-')}</div>
-            <div style="font-size:.76rem;color:var(--muted);">${esc(s.period?.label||'-')} &middot; ${new Date(s.submitted_at).toLocaleDateString('id-ID')}</div>
+            <div style="font-weight:800;">${esc(s.kpi_objectives?.name||'-')}</div>
+            <div style="font-size:.76rem;color:var(--muted);">${esc(s.kpi_periods?.label||'-')} &middot; ${new Date(s.submitted_at).toLocaleDateString('id-ID')}</div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="text-align:center;">
@@ -785,7 +788,7 @@ async function renderMyResults(pc) {
         </div>
       </div>`).join('');
   } catch(e){
-    q('myResWrap').innerHTML=`<div class="empty"><p>Gagal memuat: ${esc(e.message)}</p></div>`;
+    q('myResWrap').innerHTML=`<div class="alert ae">Gagal memuat: ${esc(e.message)}</div>`;
   }
 }
 
@@ -793,13 +796,13 @@ async function downloadMyPdf(submissionId) {
   ldr('Menyiapkan PDF...');
   try {
     const[sR,krR,evR]=await Promise.all([
-      SB.from('kpi_submissions').select('*, obj:objective_id(name,mode), period:period_id(label)').eq('id',submissionId).single(),
+      SB.from('kpi_submissions').select('*, kpi_objectives(name,mode), kpi_periods(label)').eq('id',submissionId).single(),
       SB.from('kpi_submission_kr_values').select('*').eq('submission_id',submissionId),
       SB.from('submission_evidence').select('*').eq('submission_id',submissionId).order('sort_order')
     ]);
     const s=sR.data,krs=krR.data||[],evis=evR.data||[];
     const emp=S.user,d=new Date(s.submitted_at),dt=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-    const sfLabel=s.obj?.mode==='SCALE5'?(s.sf_result||0).toFixed(2)+' / 5':String(s.sf_result||0);
+    const sfLabel=s.kpi_objectives?.mode==='SCALE5'?(s.sf_result||0).toFixed(2)+' / 5':String(s.sf_result||0);
     const rows=krs.map(v=>`<tr><td>${esc(v.kr_name||'-')}</td><td>${v.kr_target||0} ${v.kr_unit||''}</td><td>${v.real_value||0}</td><td>${v.kr_weight||0}%</td><td style="font-weight:800;">${(v.score_part||0).toFixed(2)}</td></tr>`).join('');
     const eviHtml=evis.map(e=>e.file_type==='image'&&e.file_data?`<img src="${e.file_data}" style="max-height:300px;width:100%;object-fit:contain;border:1px solid #e8ecf0;border-radius:8px;"/>`:'').join('');
     const sigHtml=s.signature_data?`<img src="${s.signature_data}" style="height:64px;width:auto;object-fit:contain;display:block;margin:0 auto;"/>`:'';
@@ -808,7 +811,7 @@ async function downloadMyPdf(submissionId) {
     tmp.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #1a56db;padding-bottom:14px;margin-bottom:20px;">
         <div><div style="font-size:14px;font-weight:900;color:#1a56db;text-transform:uppercase;">Bukti Penilaian KPI</div>
-          <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:3px;">${esc(s.period?.label||'-')}</div></div>
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:3px;">${esc(s.kpi_periods?.label||'-')}</div></div>
         <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px 20px;text-align:center;">
           <div style="font-size:36px;font-weight:900;color:#15803d;line-height:1;">${sfLabel}</div>
           <div style="font-size:10px;font-weight:800;color:#94a3b8;">SKOR AKHIR</div>
@@ -816,7 +819,7 @@ async function downloadMyPdf(submissionId) {
       </div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
         <tr><td style="color:#94a3b8;width:100px;padding:3px 0;font-size:12px;">Nama</td><td style="font-weight:700;font-size:12px;">${esc(emp.name||'-')}</td></tr>
-        <tr><td style="color:#94a3b8;padding:3px 0;font-size:12px;">KPI</td><td style="color:#1a56db;font-weight:800;font-size:12px;">${esc(s.obj?.name||'-')}</td></tr>
+        <tr><td style="color:#94a3b8;padding:3px 0;font-size:12px;">KPI</td><td style="color:#1a56db;font-weight:800;font-size:12px;">${esc(s.kpi_objectives?.name||'-')}</td></tr>
       </table>
       <h6 style="font-weight:900;border-bottom:2px solid #e8ecf0;padding-bottom:8px;margin:0 0 10px;font-size:12px;">Rincian Key Results</h6>
       <table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -853,7 +856,8 @@ function doLogout() {
   S.user = null;
   q('appShell').classList.remove('on');
   q('pgLanding').classList.add('on');
-  q('liPwd').value = '';
+  if(q('liUser')) q('liUser').value = '';
+  if(q('liPwd')) q('liPwd').value = '';
   setA('landAlert','');
 }
 
@@ -898,18 +902,22 @@ function togSB() {
 ============================================================ */
 const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
 function nav(page) {
-  q('pgTitle').textContent = PG[page] || page;
-  document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('on', b.dataset.pg===page));
-  window.scrollTo(0,0);
-  const pc = q('pgC');
-  if(page==='dashboard')       renderDash(pc);
-  else if(page==='kpi')        renderKpiForm(pc);
-  else if(page==='myResults')  renderMyResults(pc);
-  else if(page==='guide')      renderGuide(pc);
-  else if(page==='adminKpi')   renderAdminKpi(pc);
-  else if(page==='adminEmp')   renderAdminEmp(pc);
-  else if(page==='adminUsers') renderAdminUsers(pc);
-  else if(page==='adminMenus') renderAdminMenus(pc);
+  try {
+    q('pgTitle').textContent = PG[page] || page;
+    document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('on', b.dataset.pg===page));
+    window.scrollTo(0,0);
+    const pc = q('pgC');
+    if(page==='dashboard')       renderDash(pc);
+    else if(page==='kpi')        renderKpiForm(pc);
+    else if(page==='myResults')  renderMyResults(pc);
+    else if(page==='guide')      renderGuide(pc);
+    else if(page==='adminKpi')   renderAdminKpi(pc);
+    else if(page==='adminEmp')   renderAdminEmp(pc);
+    else if(page==='adminUsers') renderAdminUsers(pc);
+    else if(page==='adminMenus') renderAdminMenus(pc);
+  } catch(e) {
+    alert("Navigasi Error: " + e.message);
+  }
 }
 
 /* ============================================================
@@ -980,9 +988,12 @@ async function renderDash(pc) {
   try {
     const[statusRes,subRes,perRes]=await Promise.all([
       SB.from('v_evaluation_status').select('*').order('employee_name'),
-      SB.from('kpi_submissions').select('*, emp:employee_id(name,title), obj:objective_id(name), period:period_id(label)').order('submitted_at',{ascending:false}).limit(500),
+      SB.from('kpi_submissions').select('*, employees(name,title), kpi_objectives(name), kpi_periods(label)').order('submitted_at',{ascending:false}).limit(500),
       SB.from('kpi_periods').select('*').eq('is_active',true)
     ]);
+    
+    if (subRes.error) throw subRes.error;
+    
     S._dashStatus=statusRes.data||[];
     S._dashAll=subRes.data||[];
     const done=S._dashStatus.filter(r=>r.is_done).length;
@@ -999,7 +1010,10 @@ async function renderDash(pc) {
     });
     renderDashStatus(S._dashStatus);
     renderDashRows(S._dashAll);
-  }catch(e){console.error('Dashboard error:',e);}
+  }catch(e){
+    q('dStatEmpty').style.display='none';
+    q('dashStatusPane').innerHTML = `<div class="alert ae" style="margin:16px;"><b>Error Database:</b> ${esc(e.message)}<br/>Bisa jadi alias relasi tabel di Supabase tidak sesuai.</div>`;
+  }
   finally{ldr();}
 }
 function dashTab(tab,btn){
@@ -1028,7 +1042,7 @@ function renderDashStatus(list){
 }
 function filterDash(){
   const q2=val('dSrch').toLowerCase(),pf=val('dPFil');
-  renderDashRows(S._dashAll.filter(s=>(!q2||(s.emp?.name||'').toLowerCase().includes(q2))&&(!pf||s.period?.label===pf)));
+  renderDashRows(S._dashAll.filter(s=>(!q2||(s.employees?.name||'').toLowerCase().includes(q2))&&(!pf||s.kpi_periods?.label===pf)));
 }
 function renderDashRows(list){
   const tb=q('dBody'),em=q('dEm');
@@ -1038,9 +1052,9 @@ function renderDashRows(list){
     const sf=s.sf_result,sc=sf>=110?'bg':sf>=100?'bb':sf>=90?'bo':'br';
     return`<tr>
       <td style="color:var(--muted);font-size:.76rem;">${i+1}</td>
-      <td style="font-weight:700;">${esc(s.emp?.name||'-')}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.obj?.name||'-')}</td>
-      <td><span class="badge bgr">${esc(s.period?.label||'-')}</span></td>
+      <td style="font-weight:700;">${esc(s.employees?.name||'-')}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.kpi_objectives?.name||'-')}</td>
+      <td><span class="badge bgr">${esc(s.kpi_periods?.label||'-')}</span></td>
       <td style="font-weight:700;">${(s.sum_score||0).toFixed(2)}</td>
       <td><span class="badge ${sc}">${sf||0}</span></td>
       <td style="font-size:.76rem;color:var(--muted);">${new Date(s.submitted_at).toLocaleString('id-ID')}</td>
@@ -1068,13 +1082,15 @@ async function viewDetail(id){
         evH+='</div>';
       });
     }
-  }catch(_){}
+  }catch(e){
+    evH = `<div class="alert ae">Error Detail: ${esc(e.message)}</div>`;
+  }
   q('mDB').innerHTML=`
     <table class="rpt-meta" style="margin-bottom:12px;width:100%;border-collapse:collapse;">
-      <tr><td>Karyawan</td><td style="font-weight:700;">${esc(s.emp?.name||'-')}</td></tr>
-      <tr><td>Jabatan</td><td>${esc(s.emp?.title||'-')}</td></tr>
-      <tr><td>Objective</td><td style="color:var(--blue);font-weight:800;">${esc(s.obj?.name||'-')}</td></tr>
-      <tr><td>Periode</td><td>${esc(s.period?.label||'-')}</td></tr>
+      <tr><td>Karyawan</td><td style="font-weight:700;">${esc(s.employees?.name||'-')}</td></tr>
+      <tr><td>Jabatan</td><td>${esc(s.employees?.title||'-')}</td></tr>
+      <tr><td>Objective</td><td style="color:var(--blue);font-weight:800;">${esc(s.kpi_objectives?.name||'-')}</td></tr>
+      <tr><td>Periode</td><td>${esc(s.kpi_periods?.label||'-')}</td></tr>
       <tr><td>Total Skor</td><td style="font-weight:900;">${(s.sum_score||0).toFixed(2)}</td></tr>
       <tr><td>Skor Akhir (SF)</td><td style="font-weight:900;font-size:1.4rem;color:var(--green-d);">${s.sf_result||0}</td></tr>
       <tr><td>Catatan</td><td>${esc(s.evidence_notes||'-')}</td></tr>
@@ -1148,13 +1164,34 @@ async function renderKpiForm(pc){
   if(!dbOk){q('kW').innerHTML=`<div class="card"><div class="card-b"><div class="alert aw">Konfigurasi database dahulu!.</div></div></div>`;return;}
   ldr('Memuat data...');
   try {
-    const[eR,pR]=await Promise.all([SB.from('employees').select('*').eq('is_active',true).order('name'),SB.from('kpi_periods').select('*').eq('is_active',true).order('year')]);
+    const isEmp = S.user?.role === 'employee';
+    let empQuery = SB.from('employees').select('*').eq('is_active', true);
+    
+    // PERBAIKAN: Jika yang login Karyawan, JANGAN tampilkan semua nama. Hanya dirinya sendiri.
+    if (isEmp) empQuery = empQuery.eq('id', S.user.id);
+    else empQuery = empQuery.order('name');
+    
+    const[eR,pR]=await Promise.all([
+      empQuery,
+      SB.from('kpi_periods').select('*').eq('is_active',true).order('year')
+    ]);
+    
     S._empMap={};
-    const eS=q('kEmp'); eS.innerHTML='<option value="">-- Pilih Karyawan --</option>';
+    const eS=q('kEmp'); 
+    eS.innerHTML='<option value="">-- Pilih Karyawan --</option>';
     (eR.data||[]).forEach(e=>{S._empMap[e.id]=e;eS.add(new Option(e.name,e.id));});
+    
+    if (isEmp && eR.data?.length > 0) {
+      eS.value = S.user.id;
+      eS.disabled = true; // Kunci pilihan ke namanya sendiri
+      onKEmp();
+    }
+    
     const pS=q('kPer'); pS.innerHTML='<option value="">-- Pilih Tahun --</option>';
     (pR.data||[]).forEach(p=>pS.add(new Option(p.label,p.id)));
-  }catch(e){setA('kFA','Gagal: '+esc(e.message));}
+  }catch(e){
+    q('kW').innerHTML=`<div class="alert ae"><b>Error:</b> ${esc(e.message)}</div>`;
+  }
   finally{
     ldr();
   }
@@ -1173,7 +1210,7 @@ async function loadKObjs(){
     const sel=q('kObj'); sel.innerHTML='<option value="">-- Pilih KPI --</option>';
     S._kpiObjs.filter(o=>assigned.has(o.id)).forEach(o=>sel.add(new Option(o.name,o.id)));
     if(!S._kpiObjs.filter(o=>assigned.has(o.id)).length){
-      setA('kFA','Tidak ada KPI yang diassign untuk karyawan ini pada periode ini.','w');
+      setA('kFA','Tidak ada KPI yang ditugaskan untuk Anda pada periode ini.','w');
     }
     q('kOC').style.display='block';
   }catch(e){setA('kFA','Gagal memuat KPI: '+esc(e.message));}
@@ -1235,7 +1272,6 @@ function onTtdCh(inp){
 async function calcPreview(){
   const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj');
   
-  // Ambil value dari Simple Editor
   const noteEl = q('kNoteEditor');
   const note = (noteEl?.innerText || '').trim();
   const noteHtml = noteEl?.innerHTML || '';
@@ -1364,7 +1400,7 @@ async function renderGuide(pc){
     const guide=(data||[]).filter(m=>m.category==='guide'),info=(data||[]).filter(m=>m.category==='info');
     q('gSt').innerHTML=guide.length?guide.map((m,i)=>`<div class="gstep"><div class="gstep-n">${i+1}</div><div><h4>${esc(m.title)}</h4><p>${m.content||''}</p></div></div>`).join(''):'<div class="empty"><p>Panduan belum ditambahkan.</p></div>';
     q('gFq').innerHTML=info.length?info.map(m=>`<div class="acc"><button class="acc-btn" onclick="this.closest('.acc').classList.toggle('open')">${esc(m.title)}<span class="acc-ico">&#9660;</span></button><div class="acc-body">${m.content||''}</div></div>`).join(''):'<div class="empty"><p>Belum ada FAQ.</p></div>';
-  }catch(e){q('gSt').innerHTML=`<div class="empty"><p>${esc(e.message)}</p></div>`;}
+  }catch(e){q('gSt').innerHTML=`<div class="alert ae"><b>Error:</b> ${esc(e.message)}</div>`;}
 }
 
 /* ============================================================
@@ -1403,7 +1439,7 @@ async function loadAK(){
         ${krs.length?`<div class="tw"><table class="tbl" style="font-size:.78rem;"><thead><tr><th>Key Result</th><th style="text-align:center;">Target</th><th style="text-align:center;">Bobot KR</th></tr></thead>
         <tbody>${krs.map(k=>`<tr><td>${esc(k.kr_name)}</td><td style="text-align:center;">${k.target} ${k.unit}</td><td style="text-align:center;">${k.relative_weight}%</td></tr>`).join('')}</tbody></table></div>`:'<p style="font-size:.79rem;color:var(--muted);">Belum ada KR.</p>'}
       </div></div>`;}).join('');
-  }catch(e){wrap.innerHTML=`<div class="empty"><p>${esc(e.message)}</p></div>`;}
+  }catch(e){wrap.innerHTML=`<div class="alert ae"><b>Error:</b> ${esc(e.message)}</div>`;}
   finally{ldr();}
 }
 function openMP(){setA('mPA','');q('mPY').value='';q('mPL').value='';openM('mPeriod');}
@@ -1533,7 +1569,7 @@ async function loadEmps(){if(!dbOk)return;ldr();
 }
 function openME(){
   q('mET').textContent='Tambah Karyawan'; q('mEId').value='';
-  ['mEN','mENik','mEJ','mEL','mEEmail','mEPw'].forEach(id=>q(id)&&(q(id).value=''));
+  ['mEN','mENik','mEJ','mEL','mEUser','mEPw'].forEach(id=>q(id)&&(q(id).value=''));
   q('mES').value='true'; q('mEPH').textContent='*'; q('mEPwNote').textContent='';
   setA('mEA',''); openM('mEmp');
 }
@@ -1542,7 +1578,7 @@ function openMEE(id){
   q('mET').textContent='Edit Karyawan'; q('mEId').value=id;
   q('mEN').value=e.name||''; q('mENik').value=e.nik||'';
   q('mEJ').value=e.title||''; q('mEL').value=e.location||'';
-  q('mEEmail').value=e.email||''; q('mEPw').value='';
+  q('mEUser').value=e.email||''; q('mEPw').value='';
   q('mES').value=String(e.is_active);
   q('mEPH').textContent='(opsional)'; q('mEPwNote').textContent='Kosongkan jika tidak ingin mengubah password.';
   setA('mEA',''); openM('mEmp');
@@ -1550,16 +1586,16 @@ function openMEE(id){
 async function saveEmp(){
   const id=val('mEId'), name=val('mEN').trim(), nik=val('mENik').trim(),
     title=val('mEJ').trim(), location=val('mEL').trim(),
-    email=val('mEEmail').trim(), pw=val('mEPw'), is_active=val('mES')==='true';
+    username=val('mEUser').trim(), pw=val('mEPw'), is_active=val('mES')==='true';
   setA('mEA','');
   if(!name)  return setA('mEA','Nama wajib diisi.');
-  if(!email) return setA('mEA','Username wajib diisi.');
+  if(!username) return setA('mEA','Username wajib diisi.');
   if(!id && (!pw||pw.length<4)) return setA('mEA','Password minimal 4 karakter untuk karyawan baru.');
   try{
     ldr('Menyimpan...');
     const{error}=await SB.rpc('fn_upsert_employee',{
       p_id:id||null, p_name:name, p_nik:nik, p_title:title,
-      p_location:location, p_email:email, p_is_active:is_active, p_password:pw||null
+      p_location:location, p_email:username, p_is_active:is_active, p_password:pw||null
     });
     if(error) throw error;
     closeM('mEmp'); loadEmps();
@@ -1574,7 +1610,7 @@ async function renderAdminUsers(pc){
   pc.innerHTML=`<div class="ph"><div><div class="ph-h">Manajemen User</div><div class="ph-sub">Tambah, edit, hapus user dan atur password langsung di portal</div></div>
     <button class="btn btn-b btn-sm" onclick="openMU()">+ Tambah User</button></div>
     <div class="card"><div class="tw"><table class="tbl">
-      <thead><tr><th>#</th><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th>Dibuat</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Nama</th><th>Username</th><th>Role</th><th>Status</th><th>Dibuat</th><th></th></tr></thead>
       <tbody id="userB"></tbody></table></div>
       <div id="userEm" class="empty" style="display:none;"><span class="ei">&#9632;</span><p>Belum ada user.</p></div></div>`;loadUsers();}
 async function loadUsers(){if(!dbOk)return;ldr();
@@ -1590,21 +1626,21 @@ async function loadUsers(){if(!dbOk)return;ldr();
     </tr>`).join('');}catch(_){}finally{ldr();}}
 
 function openMU(){
-  q('mUT').textContent='Tambah User';q('mUId').value='';q('mUName').value='';q('mUEmail').value='';q('mURole').value='user';q('mUStatus').value='true';q('mUPw').value='';
+  q('mUT').textContent='Tambah User';q('mUId').value='';q('mUName').value='';q('mUUser').value='';q('mURole').value='user';q('mUStatus').value='true';q('mUPw').value='';
   q('mUPH').textContent='*';q('mUPwNote').textContent='';setA('mUA','');openM('mUser');
 }
 function openMUE(id){
   const u=S._users.find(x=>x.id===id);if(!u)return;
-  q('mUT').textContent='Edit User';q('mUId').value=id;q('mUName').value=u.name||'';q('mUEmail').value=u.email||'';q('mURole').value=u.role||'user';q('mUStatus').value=String(u.is_active);q('mUPw').value='';
+  q('mUT').textContent='Edit User';q('mUId').value=id;q('mUName').value=u.name||'';q('mUUser').value=u.email||'';q('mURole').value=u.role||'user';q('mUStatus').value=String(u.is_active);q('mUPw').value='';
   q('mUPH').textContent='(opsional)';q('mUPwNote').textContent='Kosongkan jika tidak ingin mengubah password.';setA('mUA','');openM('mUser');
 }
 async function saveUser(){
-  const id=val('mUId'),name=val('mUName').trim(),email=val('mUEmail').trim(),role=val('mURole'),is_active=val('mUStatus')==='true',pw=val('mUPw');
-  setA('mUA','');if(!name||!email)return setA('mUA','Nama dan email wajib diisi.');
+  const id=val('mUId'),name=val('mUName').trim(),username=val('mUUser').trim(),role=val('mURole'),is_active=val('mUStatus')==='true',pw=val('mUPw');
+  setA('mUA','');if(!name||!username)return setA('mUA','Nama dan username wajib diisi.');
   if(!id&&(!pw||pw.length<6))return setA('mUA','Password minimal 6 karakter untuk user baru.');
   ldr('Menyimpan user...');
   try{
-    const{data,error}=await SB.rpc('fn_upsert_user',{p_id:id||null,p_name:name,p_email:email,p_role:role,p_is_active:is_active,p_password:pw||null});
+    const{data,error}=await SB.rpc('fn_upsert_user',{p_id:id||null,p_name:name,p_email:username,p_role:role,p_is_active:is_active,p_password:pw||null});
     if(error)throw error;
     closeM('mUser');loadUsers();
   }catch(e){setA('mUA',esc(e.message));}finally{ldr();}
@@ -1612,8 +1648,7 @@ async function saveUser(){
 async function delU(id){
   if(id===S.user?.id){alert('Tidak bisa menghapus akun yang sedang aktif.');return;}
   if(!confirm('Hapus user ini?'))return;
-  try{await SB.from('users').delete().eq('id',id);loadUsers();}catch(e){alert(e.message);}
-}
+  try{await SB.from('users').delete().eq('id',id);loadUsers();}catch(e){alert(e.message);}}
 
 /* ============================================================
    ADMIN MENUS
