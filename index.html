@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Evaluasi KPI — GA Department</title>
+<title>KPI Evaluasi — GA Department</title>
 <link rel="icon" href="logo.png" type="image/png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -585,6 +585,28 @@ textarea.fc{resize:vertical;min-height:80px;}
    CONFIG
    Isi dengan URL dan Anon Key project Supabase Anda
 ============================================================ */
+/* Global error handler — tampilkan error di halaman agar mudah debug */
+window.onerror = function(msg, src, line, col) {
+  // Abaikan error dari browser extension (content.js)
+  if(src && src.includes('content.js')) return false;
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#fef2f2;border:2px solid #ef4444;border-radius:10px;padding:14px 16px;z-index:99999;font-family:monospace;font-size:12px;color:#b91c1c;cursor:pointer;';
+  box.innerHTML = `<b>Error (klik untuk tutup):</b><br>${msg}<br><small>Line ${line}</small>`;
+  box.onclick = () => box.remove();
+  document.body.appendChild(box);
+  return false;
+};
+window.onunhandledrejection = function(e) {
+  if(!e.reason) return;
+  const msg = e.reason?.message || String(e.reason);
+  if(msg.includes('content.js')) return;
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:14px 16px;z-index:99999;font-family:monospace;font-size:12px;color:#92400e;cursor:pointer;';
+  box.innerHTML = `<b>Async Error (klik tutup):</b><br>${msg}`;
+  box.onclick = () => box.remove();
+  document.body.appendChild(box);
+};
+
 const CFG = {
   url: 'https://sjrygjqmrwophdnlwhqf.supabase.co',
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcnlnanFtcndvcGhkbmx3aHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzk0OTIsImV4cCI6MjA4OTkxNTQ5Mn0.x213qcZyRFUt30VPwR2vxAoReD31BKJeSBey-j09AKs'
@@ -607,14 +629,25 @@ try {
    STATE
 ============================================================ */
 const S = {
-  user: null,          // { id, name, email, role } — dari DB, bukan Auth
+  user: null,
   _empMap: {}, _kpiObjs: [], _kpiKrs: [],
   _periods: [], _objectives: [], _emps: [],
-  _users: [], _menus: [], _dashAll: [],
+  _users: [], _menus: [], _dashAll: [], _dashStatus: [],
   _menuTab: 'guide', _sbCol: false,
   kpiSt: { savedToDb: false }
 };
 const SESSION_KEY = 'kpi_session';
+
+/* Icon SVG — didefinisikan di sini agar tersedia untuk semua fungsi */
+const IC = {
+  dashboard:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  kpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>`,
+  guide:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
+  adminKpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  adminEmp:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+  adminUsers:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  adminMenus:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+};
 
 /* ============================================================
    UTILS
@@ -685,22 +718,18 @@ async function doLogin() {
 }
 
 function enterApp() {
-  try {
-    q('pgLanding').classList.remove('on');
-    q('appShell').classList.add('on');
-    buildSB();
-    nav('dashboard');
-    try { if(dbOk) loadLandMenus(); } catch(_){}
-  } catch(e) { console.error('enterApp error:', e); }
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
+  buildSB();
+  nav('dashboard');
+  if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  try {
-    q('pgLanding').classList.remove('on');
-    q('appShell').classList.add('on');
-    buildEmployeeSB();
-    nav('kpi');
-  } catch(e) { console.error('enterEmployeeApp error:', e); }
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
+  buildEmployeeSB();
+  nav('kpi');
 }
 
 function buildEmployeeSB() {
@@ -828,15 +857,6 @@ function doLogout() {
 /* ============================================================
    SIDEBAR
 ============================================================ */
-const IC = {
-  dashboard:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
-  kpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>`,
-  guide:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`,
-  adminKpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
-  adminEmp:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
-  adminUsers:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-  adminMenus:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
-};
 function buildSB() {
   const isAdm = S.user?.role === 'master_admin';
   const nm  = S.user?.name || S.user?.email || 'User';
