@@ -83,8 +83,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-tog{background:none;border:none;cursor:pointer;color:var(--muted);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:.15s;flex-shrink:0;font-size:.8rem;}
 .sb-tog:hover{background:var(--slate-lt);}
 .sb-nav{flex:1;padding:10px 8px;overflow-y:auto;}
-.sb-sec{font-size:.63rem;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:8px 10px 4px;white-space:nowrap;overflow:hidden;margin-top:12px;}
-.sb-sec:first-child{margin-top:2px;}
+.sb-sec{font-size:.63rem;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:8px 10px 4px;white-space:nowrap;overflow:hidden;margin-top:22px;}
+.sb-sec:first-child{margin-top:6px;}
 .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--slate);font-size:.82rem;font-weight:600;transition:.15s;white-space:nowrap;border:none;background:none;font-family:inherit;width:100%;text-align:left;}
 .sb-item:hover{background:var(--slate-lt);color:var(--text);}
 .sb-item.on{background:var(--yellow-lt);color:#7a6000;font-weight:700;}
@@ -261,7 +261,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 .empty .ei{font-size:2.2rem;display:block;margin-bottom:10px;opacity:.25;}
 .pw-wrap{position:relative;}
 .tg-pw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:.85rem;}
-@media(max-width:768px){
+@media(max-width:600px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.mob{transform:translateX(0);}
   .main{margin-left:0!important;}
@@ -1014,9 +1014,9 @@ function nav(page) {
 
     // routing (pakai return biar ga ketimpa)
     if (page === 'dashboard') {
-      renderDashboardMain(pc);
-      return;
-    }
+  renderDash(pc);
+  return;
+}
 
     if (page === 'kpi') {
       renderKpiForm(pc);
@@ -1599,9 +1599,11 @@ async function renderAdminKpi(pc){
     <div class="ph">
       <div><div class="ph-h">Manajemen KPI</div><div class="ph-sub">Kelola objective, key result, dan bobot karyawan</div></div>
       <div class="ph-r">
-        <select class="fs" id="akPS" style="padding:7px 11px;font-size:.8rem;" onchange="loadAK()"><option value="">-- Pilih Periode --</option></select>
-        <button class="btn btn-out btn-sm" onclick="openMP()">+ Periode</button>
-        <button class="btn btn-b btn-sm" onclick="openMO()">+ Objective</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+  <select class="fs" id="akPS" style="padding:7px 11px;font-size:.8rem;" onchange="loadAK()"><option value="">-- Pilih Periode --</option></select>
+  <button class="btn btn-out btn-sm" onclick="openMP()">+ Periode</button>
+  <button class="btn btn-b btn-sm" onclick="openMO()">+ KPI</button>
+</div>
       </div>
     </div>
     <div id="akL"><div class="empty"><p>Pilih periode untuk melihat KPI.</p></div></div>`;
@@ -1613,7 +1615,7 @@ async function loadAK(){
   ldr('Memuat...');
   try{
     const{data}=await SB.from('kpi_objectives').select('*,kpi_key_results(*)').eq('period_id',pid).order('sort_order');S._objectives=data||[];
-    if(!S._objectives.length){wrap.innerHTML='<div class="empty"><p>Belum ada objective. Klik "+ Objective".</p></div>';return;}
+    if(!S._objectives.length){wrap.innerHTML='<div class="empty"><p>Belum ada KPI. Klik "+ KPI".</p></div>';return;}
     wrap.innerHTML=S._objectives.map(o=>{const krs=o.kpi_key_results||[];return`<div class="card" style="margin-bottom:14px;">
       <div class="card-h"><span class="card-t">${esc(o.name)} <span class="badge bb">${o.mode}</span></span>
         <div style="display:flex;gap:6px;">
