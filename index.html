@@ -26,7 +26,7 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:.875rem;line-height:1.6;overflow-x:hidden;}
 
 /* ============================================================ LANDING ============================================================ */
-#pgLanding{height:100vh;overflow:hidden;}
+#pgLanding{display:none;height:100vh;overflow:hidden;}
 #pgLanding.on{display:flex;}
 .ll{flex:0 0 520px;background:#fff;display:flex;flex-direction:column;padding:44px 60px;overflow-y:auto;}
 .lr{flex:1;background:#f0f2f5;display:flex;align-items:center;justify-content:center;overflow:hidden;}
@@ -72,7 +72,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .lr-cap p{font-size:.84rem;color:var(--muted);max-width:300px;margin:0 auto;}
 
 /* ============================================================ APP SHELL ============================================================ */
-#appShell{min-height:100vh;width:100%;}
+#appShell{display:none;min-height:100vh;width:100%;}
 #appShell.on{display:flex;width:100%;}
 .sidebar{width:var(--sw);min-height:100vh;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:.25s;}
 .sidebar.col{width:64px;}
@@ -270,7 +270,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 <div class="loader" id="loader"><div class="spin"></div><span class="ltxt" id="ltxt">Memuat...</span></div>
 
 <!-- ============================================================ LANDING ============================================================ -->
-<div id="pgLanding" class="on" style="display:flex">
+<div id="pgLanding" style="display:flex;height:100vh;overflow:hidden;">
   <div class="ll">
     <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;onerror=this.style.display='none'"/></div>
     <div class="ll-form">
@@ -379,7 +379,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 </div>
 
 <!-- ============================================================ APP SHELL ============================================================ -->
-<div id="appShell" style="display:none">
+<div id="appShell" style="display:none;">
   <nav class="sidebar" id="sidebar">
     <div class="sb-hd">
       <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;onerror=this.style.display='none'"/>
@@ -687,58 +687,50 @@ async function doLogin() {
     var loginField = document.getElementById('liUser') || document.getElementById('liEmail');
     var email = loginField ? loginField.value.trim() : '';
     var pwd = document.getElementById('liPwd') ? document.getElementById('liPwd').value : '';
-    alert('STEP 1: dbOk=' + dbOk + ' email=' + email + ' pwd=' + (pwd?'ada':'kosong'));
-
-    if (!dbOk) { alert('STOP: dbOk false'); return; }
-    if (!email || !pwd) { alert('STOP: kosong'); return; }
-
+    if (!dbOk) { alert('dbOk false!'); return; }
+    if (!email||!pwd) { alert('kosong'); return; }
     var btn = document.getElementById('btnLogin');
-    alert('STEP 2: btn=' + (btn?'ada':'NULL'));
-    if(btn){ btn.disabled = true; btn.textContent = 'Masuk...'; }
-
-    alert('STEP 3: Akan panggil RPC fn_login');
-    var result = await SB.rpc('fn_login', { p_email: email, p_password: pwd });
-    alert('STEP 4: RPC selesai. error=' + JSON.stringify(result.error) + ' data=' + JSON.stringify(result.data));
-
-    if (result.error) throw result.error;
-    if (!result.data || result.data.length === 0) throw new Error('Data kosong - login gagal');
-
+    if(btn){ btn.disabled=true; btn.textContent='...'; }
+    var result = await SB.rpc('fn_login', {p_email:email, p_password:pwd});
+    if(result.error) throw result.error;
+    if(!result.data||!result.data.length) throw new Error('Data kosong');
     var raw = result.data[0];
-    alert('STEP 5: raw=' + JSON.stringify(raw));
-
-    var user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active };
-    alert('STEP 6: user.role=' + user.role + ' is_active=' + user.is_active);
-
+    var user = {id:raw.out_id,name:raw.out_name,email:raw.out_email,role:raw.out_role,is_active:raw.out_is_active};
     S.user = user;
-    alert('STEP 7: Akan panggil enterApp...');
-    if (user.role === 'employee') { enterEmployeeApp(); } else { enterApp(); }
-    alert('STEP 8: enterApp selesai');
-
+    
+    // Debug enterApp inline
+    alert('LOGIN OK - role=' + user.role + '. Akan hide landing...');
+    var land = document.getElementById('pgLanding');
+    var app = document.getElementById('appShell');
+    alert('land=' + (land?land.tagName:'NULL') + ' app=' + (app?app.tagName:'NULL'));
+    land.style.display = 'none';
+    app.style.display = 'flex';
+    app.style.width = '100%';
+    app.style.minHeight = '100vh';
+    alert('display set. land.display=' + land.style.display + ' app.display=' + app.style.display);
+    buildSB();
+    alert('buildSB done');
+    nav('dashboard');
+    alert('nav done - should see dashboard now');
+    
   } catch(ex) {
-    alert('ERROR di step: ' + ex.message + ' | ' + ex.stack);
+    alert('ERROR: ' + ex.message);
     var btn2 = document.getElementById('btnLogin');
-    if(btn2){ btn2.disabled = false; btn2.textContent = 'Masuk'; }
-    var la = document.getElementById('landAlert');
-    if(la) la.innerHTML = '<div style="color:red;padding:8px">' + ex.message + '</div>';
+    if(btn2){ btn2.disabled=false; btn2.textContent='Masuk'; }
   }
 }
 
-
 function enterApp() {
-  q('pgLanding').style.display = 'none';
-  q('appShell').style.display = 'flex';
-  q('appShell').style.width = '100%';
-  q('appShell').style.minHeight = '100vh';
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
   buildSB();
   nav('dashboard');
   if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').style.display = 'none';
-  q('appShell').style.display = 'flex';
-  q('appShell').style.width = '100%';
-  q('appShell').style.minHeight = '100vh';
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
   buildEmployeeSB();
   nav('kpi');
 }
@@ -859,10 +851,9 @@ function doLogout() {
   closeM('mLogout');
   clearSession();
   S.user = null;
-  q('appShell').style.display = 'none';
-  q('pgLanding').style.display = 'flex';
-  var pw = q('liPwd') || q('liUser');
-  if(pw) pw.value = '';
+  q('appShell').classList.remove('on');
+  q('pgLanding').classList.add('on');
+  q('liPwd').value = '';
   setA('landAlert','');
 }
 
