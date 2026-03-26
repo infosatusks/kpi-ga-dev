@@ -615,15 +615,27 @@ const CFG = {
 /* ============================================================
    INIT SUPABASE (tanpa Auth — hanya sebagai database client)
 ============================================================ */
+// Memory storage agar tidak crash di Safari (Tracking Prevention)
+const _noStorage = {
+  getItem:    () => null,
+  setItem:    () => {},
+  removeItem: () => {},
+};
 let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
-    SB = supabase.createClient(CFG.url, CFG.key, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
-    dbOk = true;
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      SB = supabase.createClient(CFG.url, CFG.key, {
+        auth: {
+          persistSession:   false,
+          autoRefreshToken: false,
+          storage:          _noStorage,
+        }
+      });
+      dbOk = true;
+    }
   }
-} catch(e) { console.warn('Supabase:', e.message); }
+} catch(e) { console.warn('Supabase init gagal:', e.message); }
 
 /* ============================================================
    STATE
