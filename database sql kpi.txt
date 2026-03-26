@@ -1,0 +1,478 @@
+-- ================================================================
+-- KPI Evaluasi GA — Reset & Setup v6
+-- Arsitektur baru: karyawan punya login sendiri, assignment KPI
+-- Jalankan di: Supabase Dashboard → SQL Editor
+-- ================================================================
+
+-- ================================================================
+-- STEP 1: DROP semua fungsi lama
+-- ================================================================
+DROP FUNCTION IF EXISTS fn_login(TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS fn_upsert_user(UUID, TEXT, TEXT, TEXT, BOOLEAN, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS fn_upsert_employee(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS _upd_at() CASCADE;
+DROP FUNCTION IF EXISTS is_admin() CASCADE;
+DROP VIEW  IF EXISTS v_evaluation_status;
+
+-- ================================================================
+-- STEP 2: DROP semua tabel lama (child dulu)
+-- ================================================================
+DROP TABLE IF EXISTS submission_evidence         CASCADE;
+DROP TABLE IF EXISTS kpi_submission_kr_values    CASCADE;
+DROP TABLE IF EXISTS kpi_submissions             CASCADE;
+DROP TABLE IF EXISTS kpi_assignments             CASCADE;
+DROP TABLE IF EXISTS employee_kpi_weights        CASCADE;
+DROP TABLE IF EXISTS kpi_key_results             CASCADE;
+DROP TABLE IF EXISTS kpi_objectives              CASCADE;
+DROP TABLE IF EXISTS kpi_periods                 CASCADE;
+DROP TABLE IF EXISTS menu_items                  CASCADE;
+DROP TABLE IF EXISTS activity_log                CASCADE;
+DROP TABLE IF EXISTS employees                   CASCADE;
+DROP TABLE IF EXISTS profiles                    CASCADE;
+DROP TABLE IF EXISTS users                       CASCADE;
+-- Tabel dari schema lama jika ada
+DROP TABLE IF EXISTS evaluation_sum              CASCADE;
+DROP TABLE IF EXISTS kpi_evaluations             CASCADE;
+DROP TABLE IF EXISTS kpi_years                   CASCADE;
+DROP TABLE IF EXISTS module_access               CASCADE;
+
+-- ================================================================
+-- STEP 3: Ekstensi
+-- ================================================================
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ================================================================
+-- STEP 4: users — akun Master Admin, dikelola dari portal
+-- ================================================================
+CREATE TABLE users (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name          TEXT NOT NULL,
+  email         TEXT NOT NULL UNIQUE,     -- dipakai sebagai username login
+  password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL DEFAULT 'master_admin'
+                CHECK (role IN ('master_admin', 'user')),
+  is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 5: employees — data karyawan + kredensial login sendiri
+-- ================================================================
+CREATE TABLE employees (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name          TEXT NOT NULL,
+  nik           TEXT,
+  title         TEXT,
+  location      TEXT,
+  -- Kredensial login karyawan (dikelola admin dari portal)
+  email         TEXT UNIQUE,              -- username login karyawan
+  password_hash TEXT,                     -- hash bcrypt
+  is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 6: kpi_periods
+-- ================================================================
+CREATE TABLE kpi_periods (
+  id         SERIAL PRIMARY KEY,
+  year       INTEGER NOT NULL UNIQUE,
+  label      TEXT NOT NULL,
+  is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 7: kpi_objectives — Nama KPI per periode
+-- mode: UNCAPPED | CAP100 | SCALE5
+-- ================================================================
+CREATE TABLE kpi_objectives (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  period_id  INTEGER NOT NULL REFERENCES kpi_periods(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  formula    TEXT,
+  mode       TEXT NOT NULL DEFAULT 'UNCAPPED'
+             CHECK (mode IN ('UNCAPPED','CAP100','SCALE5')),
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(period_id, name)
+);
+
+-- ================================================================
+-- STEP 8: kpi_key_results — Key Result per KPI
+-- ================================================================
+CREATE TABLE kpi_key_results (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  objective_id    UUID NOT NULL REFERENCES kpi_objectives(id) ON DELETE CASCADE,
+  kr_name         TEXT NOT NULL,
+  target          NUMERIC NOT NULL DEFAULT 100,
+  unit            TEXT NOT NULL DEFAULT '',
+  relative_weight NUMERIC NOT NULL DEFAULT 100,
+  sort_order      INTEGER NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 9: kpi_assignments
+--   Menentukan KPI mana yang dikenakan ke karyawan mana.
+--   Diset manual oleh admin saat membuat/edit KPI.
+--   weight: tidak wajib diisi (tidak mempengaruhi perhitungan satuan)
+-- ================================================================
+CREATE TABLE kpi_assignments (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id  UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+  objective_id UUID NOT NULL REFERENCES kpi_objectives(id) ON DELETE CASCADE,
+  weight       NUMERIC NOT NULL DEFAULT 0,   -- opsional, untuk keperluan future
+  assigned_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(employee_id, objective_id)
+);
+
+-- ================================================================
+-- STEP 10: kpi_submissions — hasil penilaian KPI
+-- ================================================================
+CREATE TABLE kpi_submissions (
+  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  employee_id        UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+  objective_id       UUID NOT NULL REFERENCES kpi_objectives(id),
+  period_id          INTEGER NOT NULL REFERENCES kpi_periods(id),
+  submitted_by_user  UUID REFERENCES users(id),      -- admin yang submit (jika admin)
+  submitted_by_emp   UUID REFERENCES employees(id),  -- karyawan yang submit sendiri
+  sum_score          NUMERIC,
+  sf_result          NUMERIC,
+  evidence_notes     TEXT,
+  has_evidence       BOOLEAN NOT NULL DEFAULT FALSE,
+  signature_data     TEXT,
+  signature_filename TEXT,
+  submitted_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 11: kpi_submission_kr_values — snapshot nilai KR saat submit
+-- ================================================================
+CREATE TABLE kpi_submission_kr_values (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  submission_id UUID NOT NULL REFERENCES kpi_submissions(id) ON DELETE CASCADE,
+  kr_id         UUID NOT NULL REFERENCES kpi_key_results(id),
+  kr_name       TEXT,
+  kr_target     NUMERIC,
+  kr_unit       TEXT,
+  kr_weight     NUMERIC,
+  real_value    NUMERIC,
+  score_part    NUMERIC,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 12: submission_evidence — file bukti (base64)
+-- ================================================================
+CREATE TABLE submission_evidence (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  submission_id UUID NOT NULL REFERENCES kpi_submissions(id) ON DELETE CASCADE,
+  sort_order    INTEGER NOT NULL DEFAULT 0,
+  file_name     TEXT,
+  file_type     TEXT,    -- 'image' atau 'pdf'
+  file_size     BIGINT,
+  file_data     TEXT,    -- base64 data URL
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 13: menu_items — konten accordion halaman login
+-- ================================================================
+CREATE TABLE menu_items (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  category   TEXT NOT NULL DEFAULT 'guide'
+             CHECK (category IN ('guide','info')),
+  title      TEXT NOT NULL,
+  content    TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ================================================================
+-- STEP 14: View — Status Evaluasi per Karyawan per KPI
+-- ================================================================
+CREATE VIEW v_evaluation_status AS
+SELECT
+  ka.employee_id,
+  e.name          AS employee_name,
+  e.title         AS employee_title,
+  o.id            AS objective_id,
+  o.name          AS objective_name,
+  o.mode          AS objective_mode,
+  p.id            AS period_id,
+  p.label         AS period_label,
+  CASE WHEN s.id IS NOT NULL THEN TRUE ELSE FALSE END AS is_done,
+  s.id            AS submission_id,
+  s.sf_result,
+  s.sum_score,
+  s.submitted_at
+FROM kpi_assignments ka
+JOIN employees     e ON e.id = ka.employee_id
+JOIN kpi_objectives o ON o.id = ka.objective_id
+JOIN kpi_periods   p ON p.id = o.period_id
+LEFT JOIN kpi_submissions s
+  ON s.employee_id = ka.employee_id
+ AND s.objective_id = ka.objective_id;
+
+-- ================================================================
+-- STEP 15: Index
+-- ================================================================
+CREATE INDEX idx_users_email       ON users(email);
+CREATE INDEX idx_emp_email         ON employees(email);
+CREATE INDEX idx_kpi_obj_per       ON kpi_objectives(period_id);
+CREATE INDEX idx_kpi_kr_obj        ON kpi_key_results(objective_id);
+CREATE INDEX idx_assign_emp        ON kpi_assignments(employee_id);
+CREATE INDEX idx_assign_obj        ON kpi_assignments(objective_id);
+CREATE INDEX idx_sub_emp           ON kpi_submissions(employee_id);
+CREATE INDEX idx_sub_per           ON kpi_submissions(period_id);
+CREATE INDEX idx_subkr_sub         ON kpi_submission_kr_values(submission_id);
+CREATE INDEX idx_evi_sub           ON submission_evidence(submission_id);
+CREATE INDEX idx_menu_cat          ON menu_items(category, sort_order);
+
+-- ================================================================
+-- STEP 16: Trigger updated_at
+-- ================================================================
+CREATE OR REPLACE FUNCTION _upd_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
+$$;
+
+CREATE TRIGGER t_users_upd  BEFORE UPDATE ON users        FOR EACH ROW EXECUTE FUNCTION _upd_at();
+CREATE TRIGGER t_emp_upd    BEFORE UPDATE ON employees     FOR EACH ROW EXECUTE FUNCTION _upd_at();
+CREATE TRIGGER t_obj_upd    BEFORE UPDATE ON kpi_objectives FOR EACH ROW EXECUTE FUNCTION _upd_at();
+CREATE TRIGGER t_menu_upd   BEFORE UPDATE ON menu_items    FOR EACH ROW EXECUTE FUNCTION _upd_at();
+
+-- ================================================================
+-- STEP 17: RPC fn_login
+--   Cek tabel users (admin) ATAU employees (karyawan)
+--   Prefix out_ untuk hindari ambiguous column error
+-- ================================================================
+CREATE OR REPLACE FUNCTION fn_login(p_email TEXT, p_password TEXT)
+RETURNS TABLE (
+  out_id        UUID,
+  out_name      TEXT,
+  out_email     TEXT,
+  out_role      TEXT,
+  out_is_active BOOLEAN,
+  out_source    TEXT
+)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  -- Cek users (admin) dulu
+  IF EXISTS (
+    SELECT 1 FROM users u
+    WHERE u.email = LOWER(TRIM(p_email))
+      AND u.password_hash = crypt(p_password, u.password_hash)
+  ) THEN
+    RETURN QUERY
+    SELECT u.id, u.name, u.email, u.role, u.is_active, 'users'::TEXT
+    FROM users u
+    WHERE u.email = LOWER(TRIM(p_email))
+      AND u.password_hash = crypt(p_password, u.password_hash);
+    RETURN;
+  END IF;
+
+  -- Cek employees (karyawan)
+  RETURN QUERY
+  SELECT e.id, e.name, e.email, 'employee'::TEXT, e.is_active, 'employees'::TEXT
+  FROM employees e
+  WHERE e.email = LOWER(TRIM(p_email))
+    AND e.password_hash IS NOT NULL
+    AND e.password_hash = crypt(p_password, e.password_hash);
+END;
+$$;
+
+-- ================================================================
+-- STEP 18: RPC fn_upsert_user — kelola akun admin
+-- ================================================================
+CREATE OR REPLACE FUNCTION fn_upsert_user(
+  p_id        UUID,
+  p_name      TEXT,
+  p_email     TEXT,
+  p_role      TEXT,
+  p_is_active BOOLEAN,
+  p_password  TEXT DEFAULT NULL
+)
+RETURNS TABLE (out_id UUID, out_name TEXT, out_email TEXT, out_role TEXT, out_is_active BOOLEAN)
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_id UUID;
+BEGIN
+  IF p_id IS NULL THEN
+    IF p_password IS NULL OR LENGTH(TRIM(p_password)) < 6 THEN
+      RAISE EXCEPTION 'Password minimal 6 karakter untuk admin baru.';
+    END IF;
+    IF EXISTS (SELECT 1 FROM users WHERE users.email = LOWER(TRIM(p_email))) THEN
+      RAISE EXCEPTION 'Username sudah digunakan.';
+    END IF;
+    INSERT INTO users (name, email, password_hash, role, is_active)
+    VALUES (TRIM(p_name), LOWER(TRIM(p_email)), crypt(p_password, gen_salt('bf',10)), p_role, p_is_active)
+    RETURNING users.id INTO v_id;
+  ELSE
+    IF EXISTS (SELECT 1 FROM users WHERE users.email = LOWER(TRIM(p_email)) AND users.id <> p_id) THEN
+      RAISE EXCEPTION 'Username sudah digunakan admin lain.';
+    END IF;
+    IF p_password IS NOT NULL AND LENGTH(TRIM(p_password)) >= 6 THEN
+      UPDATE users SET name=TRIM(p_name), email=LOWER(TRIM(p_email)), role=p_role,
+        is_active=p_is_active, password_hash=crypt(p_password, gen_salt('bf',10)), updated_at=NOW()
+      WHERE users.id = p_id;
+    ELSE
+      UPDATE users SET name=TRIM(p_name), email=LOWER(TRIM(p_email)), role=p_role,
+        is_active=p_is_active, updated_at=NOW()
+      WHERE users.id = p_id;
+    END IF;
+    v_id := p_id;
+  END IF;
+  RETURN QUERY SELECT u.id, u.name, u.email, u.role, u.is_active FROM users u WHERE u.id = v_id;
+END;
+$$;
+
+-- ================================================================
+-- STEP 19: RPC fn_upsert_employee
+--   Buat/edit karyawan sekaligus set username + password login
+-- ================================================================
+CREATE OR REPLACE FUNCTION fn_upsert_employee(
+  p_id        UUID,
+  p_name      TEXT,
+  p_nik       TEXT,
+  p_title     TEXT,
+  p_location  TEXT,
+  p_email     TEXT,
+  p_is_active BOOLEAN,
+  p_password  TEXT DEFAULT NULL
+)
+RETURNS SETOF employees
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_id UUID;
+BEGIN
+  IF p_id IS NULL THEN
+    IF p_email IS NULL OR TRIM(p_email) = '' THEN
+      RAISE EXCEPTION 'Username wajib diisi.';
+    END IF;
+    IF p_password IS NULL OR LENGTH(TRIM(p_password)) < 4 THEN
+      RAISE EXCEPTION 'Password minimal 4 karakter untuk karyawan baru.';
+    END IF;
+    IF EXISTS (SELECT 1 FROM employees WHERE employees.email = LOWER(TRIM(p_email))) THEN
+      RAISE EXCEPTION 'Username sudah digunakan karyawan lain.';
+    END IF;
+    -- Pastikan tidak bentrok dengan akun admin
+    IF EXISTS (SELECT 1 FROM users WHERE users.email = LOWER(TRIM(p_email))) THEN
+      RAISE EXCEPTION 'Username sudah digunakan oleh akun admin.';
+    END IF;
+    INSERT INTO employees (name, nik, title, location, email, password_hash, is_active)
+    VALUES (TRIM(p_name), p_nik, p_title, p_location,
+            LOWER(TRIM(p_email)), crypt(p_password, gen_salt('bf',10)), p_is_active)
+    RETURNING employees.id INTO v_id;
+  ELSE
+    IF p_email IS NOT NULL AND TRIM(p_email) <> '' THEN
+      IF EXISTS (SELECT 1 FROM employees WHERE employees.email = LOWER(TRIM(p_email)) AND employees.id <> p_id) THEN
+        RAISE EXCEPTION 'Username sudah digunakan karyawan lain.';
+      END IF;
+      IF EXISTS (SELECT 1 FROM users WHERE users.email = LOWER(TRIM(p_email))) THEN
+        RAISE EXCEPTION 'Username sudah digunakan oleh akun admin.';
+      END IF;
+    END IF;
+    IF p_password IS NOT NULL AND LENGTH(TRIM(p_password)) >= 4 THEN
+      UPDATE employees SET name=TRIM(p_name), nik=p_nik, title=p_title, location=p_location,
+        email=LOWER(TRIM(p_email)), is_active=p_is_active,
+        password_hash=crypt(p_password, gen_salt('bf',10)), updated_at=NOW()
+      WHERE employees.id = p_id;
+    ELSE
+      UPDATE employees SET name=TRIM(p_name), nik=p_nik, title=p_title, location=p_location,
+        email=LOWER(TRIM(p_email)), is_active=p_is_active, updated_at=NOW()
+      WHERE employees.id = p_id;
+    END IF;
+    v_id := p_id;
+  END IF;
+  RETURN QUERY SELECT * FROM employees WHERE id = v_id;
+END;
+$$;
+
+-- ================================================================
+-- STEP 20: Grant akses ke anon role
+-- ================================================================
+GRANT EXECUTE ON FUNCTION fn_login(TEXT, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION fn_upsert_user(UUID, TEXT, TEXT, TEXT, BOOLEAN, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION fn_upsert_employee(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT) TO anon;
+GRANT SELECT ON v_evaluation_status TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon;
+
+-- ================================================================
+-- STEP 21: Seed — Master Admin
+--   Nama    : Rizki Aziz Radyantama
+--   Username: arizki
+--   Password: 00general
+--   Role    : master_admin
+-- ================================================================
+INSERT INTO users (name, email, password_hash, role, is_active)
+VALUES (
+  'Rizki Aziz Radyantama',
+  'arizki',
+  crypt('00general', gen_salt('bf', 10)),
+  'master_admin',
+  TRUE
+);
+
+-- ================================================================
+-- STEP 22: Seed — Panduan & FAQ default
+-- ================================================================
+INSERT INTO menu_items (category, title, content, sort_order, is_active) VALUES
+('guide', 'Langkah 1 — Pilih Karyawan & Periode',
+ 'Pilih nama karyawan dan tahun evaluasi. NIK, jabatan, dan lokasi kerja terisi otomatis.',
+ 1, TRUE),
+('guide', 'Langkah 2 — Pilih KPI',
+ 'Pilih KPI yang ingin dievaluasi. Hanya KPI yang sudah diassign oleh admin yang tampil.',
+ 2, TRUE),
+('guide', 'Langkah 3 — Input Realisasi Key Result',
+ 'Masukkan nilai realisasi setiap Key Result. Skor dihitung otomatis sesuai formula.',
+ 3, TRUE),
+('guide', 'Langkah 4 — Upload Bukti & Tanda Tangan',
+ 'Upload bukti pendukung (JPG, PNG, atau PDF maks. 2 MB) dan tanda tangan (JPG/PNG).',
+ 4, TRUE),
+('guide', 'Langkah 5 — Preview & Simpan',
+ 'Klik "Hitung & Preview Hasil" untuk melihat laporan, lalu simpan ke database dan unduh PDF.',
+ 5, TRUE),
+('info', 'Apa itu mode UNCAPPED?',
+ 'Skor = (Realisasi / Target) × Bobot KR, tanpa batas atas.',
+ 1, TRUE),
+('info', 'Apa itu mode CAP100?',
+ 'Skor dibatasi maks 100% dari bobot KR. Realisasi melebihi target tidak menambah skor.',
+ 2, TRUE),
+('info', 'Apa itu mode SCALE5?',
+ 'Untuk KPI berskala 0–5 seperti IDP dan Knowledge Management.',
+ 3, TRUE),
+('info', 'Bagaimana SF dihitung?',
+ 'SF (Score Factor): ≥120% = 120 | >100% = 110 | =100% = 100 | ≥80% = 90 | <80% = 80.',
+ 4, TRUE)
+ON CONFLICT DO NOTHING;
+
+-- ================================================================
+-- CATATAN PERUBAHAN DARI VERSI SEBELUMNYA:
+--
+-- 1. employee_kpi_weights → kpi_assignments
+--    Kolom user_id → employee_id (lebih jelas)
+--    Weight tetap ada tapi opsional (tidak wajib diisi)
+--
+-- 2. employees sekarang punya kolom email + password_hash
+--    → Karyawan bisa login sendiri
+--    → fn_upsert_employee menggantikan CRUD manual
+--
+-- 3. kpi_submissions
+--    Kolom user_id → employee_id
+--    Tambah submitted_by_user (admin) DAN submitted_by_emp (karyawan)
+--
+-- 4. v_evaluation_status
+--    View untuk dashboard: status sudah/belum per karyawan per KPI
+--
+-- LOGIN:
+--   Admin     : username "arizki", password "00general"
+--   Karyawan  : username & password dibuat admin dari portal
+-- ================================================================
