@@ -604,15 +604,27 @@ function sysErr(m) {
   document.body.appendChild(d);
 }
 
+// Filter helper: apakah error berasal dari storage/tracking browser
+function _isStorageErr(msg) {
+  if (!msg) return false;
+  const m = String(msg).toLowerCase();
+  return m.includes('storage') || m.includes('localstorage') ||
+         m.includes('sessionstorage') || m.includes('tracking') ||
+         m.includes('securityerror') || m.includes('access is denied') ||
+         m.includes('quota') || m.includes('blocked');
+}
+
 window.onerror = function(msg, src, line) {
-  if(src && src.includes('content.js')) return false;
+  if (src && src.includes('content.js')) return false;
+  if (_isStorageErr(msg)) return false; // abaikan error storage browser
   sysErr(`${msg}<br/>Line: ${line}`);
   return false;
 };
 window.onunhandledrejection = function(e) {
-  if(!e.reason) return;
+  if (!e.reason) return;
   const msg = e.reason.message ? e.reason.message : String(e.reason);
-  if(msg.includes('content.js')) return;
+  if (msg.includes('content.js')) return;
+  if (_isStorageErr(msg)) return; // abaikan rejection storage browser
   sysErr(msg);
 };
 
@@ -630,13 +642,23 @@ const CFG = {
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcnlnanFtcndvcGhkbmx3aHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzk0OTIsImV4cCI6MjA4OTkxNTQ5Mn0.x213qcZyRFUt30VPwR2vxAoReD31BKJeSBey-j09AKs'
 };
 
-// MEMORY STORAGE UNTUK BYPASS ERROR "Tracking Prevention blocked access to storage" DARI BROWSER
+// MEMORY STORAGE — bypass "Tracking Prevention blocked access to storage"
+// Dipakai Supabase auth DAN dipatch ke window.localStorage / sessionStorage
 const memoryStorage = {
   _data: {},
-  getItem: function(k){ return this._data[k] || null; },
-  setItem: function(k,v){ this._data[k] = v; },
-  removeItem: function(k){ delete this._data[k]; }
+  getItem:    function(k)   { return Object.prototype.hasOwnProperty.call(this._data, k) ? this._data[k] : null; },
+  setItem:    function(k,v) { this._data[k] = String(v); },
+  removeItem: function(k)   { delete this._data[k]; },
+  clear:      function()    { this._data = {}; },
+  key:        function(i)   { return Object.keys(this._data)[i] || null; },
+  get length(){ return Object.keys(this._data).length; }
 };
+
+// Patch global agar Supabase JS (realtime, postgrest, dsb) tidak menyentuh browser storage
+try {
+  Object.defineProperty(window, 'localStorage',   { get: () => memoryStorage });
+  Object.defineProperty(window, 'sessionStorage', { get: () => memoryStorage });
+} catch(_) {}
 
 let SB = null, dbOk = false;
 try {
