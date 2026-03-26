@@ -280,7 +280,7 @@ textarea.fc{resize:vertical;min-height:80px;}
       </div>
       <div id="landAlert"></div>
       <div class="lf-g"><label class="lf-l">Email / Username</label>
-        <input class="lf-i" type="email" id="liEmail" placeholder="Masukkan email Anda" autocomplete="email"/></div>
+        <input class="lf-i" type="text" id="liUser" placeholder="Masukkan username Anda" autocomplete="username"/></div>
       <div class="lf-g"><label class="lf-l">Password</label>
         <div class="lf-pw">
           <input class="lf-i" type="password" id="liPwd" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px;" onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -684,7 +684,7 @@ function clearSession() {
 
 async function doLogin() {
   if (!dbOk) { setA('landAlert','Konfigurasi Konfigurasi database dahulu! Hubungi administrator.','w'); return; }
-  const email = val('liEmail').trim();
+  const email = val('liUser').trim();
   const pwd   = val('liPwd');
   if (!email||!pwd) { setA('landAlert','Email dan password wajib diisi.'); return; }
   setA('landAlert','');
