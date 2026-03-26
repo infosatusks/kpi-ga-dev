@@ -1161,7 +1161,7 @@ async function renderDash(pc) {
   try {
     const[statusRes,subRes,perRes]=await Promise.all([
       SB.from('v_evaluation_status').select('*').order('employee_name'),
-      SB.from('kpi_submissions').select('*, employees(name,title), kpi_objectives(name), kpi_periods(label)').order('submitted_at',{ascending:false}).limit(500),
+      SB.from('kpi_submissions').select('*, employees!kpi_submissions_employee_id_fkey(name,title), kpi_objectives(name), kpi_periods(label)').order('submitted_at',{ascending:false}).limit(500),
       SB.from('kpi_periods').select('*').eq('is_active',true)
     ]);
     
