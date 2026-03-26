@@ -141,6 +141,16 @@ textarea.fc{resize:vertical;min-height:80px;}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
 @media(max-width:640px){.row2,.row3{grid-template-columns:1fr;}}
 
+/* ============================================================ SIMPLE EDITOR ============================================================ */
+.se-wrap { border: 1.5px solid var(--border); border-radius: 8px; background: #fff; overflow: hidden; transition: .15s; }
+.se-wrap:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
+.se-toolbar { display: flex; gap: 4px; padding: 6px 8px; background: var(--slate-lt); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.se-toolbar button { background: #fff; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; padding: 4px 10px; font-weight: bold; color: var(--slate-d); font-size: .8rem; transition: .15s; }
+.se-toolbar button:hover { background: var(--blue-lt); color: var(--blue); border-color: var(--blue); }
+.se-content { padding: 12px; min-height: 100px; outline: none; font-size: .855rem; line-height: 1.6; color: var(--text); }
+.se-content[placeholder]:empty:before { content: attr(placeholder); color: var(--muted); pointer-events: none; display: block; }
+.se-content ul, .se-content ol { padding-left: 20px; margin-bottom: 8px; }
+
 /* ============================================================ BUTTONS ============================================================ */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;border:none;transition:.15s;white-space:nowrap;}
 .btn:disabled{opacity:.45;cursor:not-allowed;}
@@ -262,14 +272,14 @@ textarea.fc{resize:vertical;min-height:80px;}
 <!-- ============================================================ LANDING ============================================================ -->
 <div id="pgLanding" class="on">
   <div class="ll">
-    <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;"/></div>
+    <div class="ll-logo"><img src="logo.png" alt="KPI" style="height:34px;width:auto;object-fit:contain;onerror=this.style.display='none'"/></div>
     <div class="ll-form">
       <div class="ll-welcome">
         <h1>Selamat Datang</h1>
         <p>Masuk dengan akun yang telah diberikan oleh administrator.</p>
       </div>
       <div id="landAlert"></div>
-      <div class="lf-g"><label class="lf-l">Email</label>
+      <div class="lf-g"><label class="lf-l">Email / Username</label>
         <input class="lf-i" type="email" id="liEmail" placeholder="Masukkan email Anda" autocomplete="email"/></div>
       <div class="lf-g"><label class="lf-l">Password</label>
         <div class="lf-pw">
@@ -372,7 +382,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 <div id="appShell">
   <nav class="sidebar" id="sidebar">
     <div class="sb-hd">
-      <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;"/>
+      <img src="logo.png" alt="KPI" class="sb-logo-img" style="height:28px;width:auto;max-width:32px;object-fit:contain;flex-shrink:0;onerror=this.style.display='none'"/>
       <span class="sb-brand">KPI Evaluasi</span>
       <button class="sb-tog" id="sbTog" onclick="togSB()">&#171;</button>
     </div>
@@ -511,7 +521,7 @@ textarea.fc{resize:vertical;min-height:80px;}
   </div>
 </div>
 
-<!-- Modal User — tanpa Supabase Auth, password dikelola di sini -->
+<!-- Modal User -->
 <div class="modal" id="mUser">
   <div class="mbox" style="max-width:500px;">
     <div class="mhd"><span class="mt" id="mUT">Tambah User</span><button class="mx" onclick="closeM('mUser')">&#10005;</button></div>
@@ -579,13 +589,8 @@ textarea.fc{resize:vertical;min-height:80px;}
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-/* ============================================================
-   CONFIG
-   Isi dengan URL dan Anon Key project Supabase Anda
-============================================================ */
-/* Global error handler — tampilkan error di halaman agar mudah debug */
+/* Global error handler */
 window.onerror = function(msg, src, line, col) {
-  // Abaikan error dari browser extension (content.js)
   if(src && src.includes('content.js')) return false;
   const box = document.createElement('div');
   box.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;background:#fef2f2;border:2px solid #ef4444;border-radius:10px;padding:14px 16px;z-index:99999;font-family:monospace;font-size:12px;color:#b91c1c;cursor:pointer;';
@@ -610,23 +615,16 @@ const CFG = {
   key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqcnlnanFtcndvcGhkbmx3aHFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzk0OTIsImV4cCI6MjA4OTkxNTQ5Mn0.x213qcZyRFUt30VPwR2vxAoReD31BKJeSBey-j09AKs'
 };
 
-/* ============================================================
-   INIT SUPABASE (tanpa Auth — hanya sebagai database client)
-============================================================ */
-const _noStorage={getItem:()=>null,setItem:()=>{},removeItem:()=>{}};
 let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
     SB = supabase.createClient(CFG.url, CFG.key, {
-      auth:{persistSession:false,autoRefreshToken:false,storage:_noStorage}
+      auth: { persistSession: false, autoRefreshToken: false }
     });
     dbOk = true;
   }
 } catch(e) { console.warn('Supabase:', e.message); }
 
-/* ============================================================
-   STATE
-============================================================ */
 const S = {
   user: null,
   _empMap: {}, _kpiObjs: [], _kpiKrs: [],
@@ -637,7 +635,6 @@ const S = {
 };
 const SESSION_KEY = 'kpi_session';
 
-/* Icon SVG — didefinisikan di sini agar tersedia untuk semua fungsi */
 const IC = {
   dashboard:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
   kpi:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>`,
@@ -648,9 +645,6 @@ const IC = {
   adminMenus:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
 };
 
-/* ============================================================
-   UTILS
-============================================================ */
 const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const q   = id => document.getElementById(id);
 const val = id => q(id)?.value ?? '';
@@ -667,18 +661,13 @@ function isPdf(f) { if(!f)return false; return f.type==='application/pdf'||f.nam
 function tgPw(id, btn) { const i=q(id); i.type=i.type==='password'?'text':'password'; btn.innerHTML=i.type==='text'?'&#128064;':'&#128065;'; }
 function fileToB64(file) { return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);}); }
 
-/* ============================================================
-   SESSION (localStorage — no Supabase Auth)
-============================================================ */
-let _memSession = null; // fallback jika storage diblokir browser
+let _memSession = null;
 function saveSession(user) {
   _memSession = user;
   try {
-    if (q('liRemember').checked)
-      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    else
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  } catch(_) { /* storage diblokir, pakai memory saja */ }
+    if (q('liRemember').checked) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    else sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  } catch(_) { }
 }
 function loadSession() {
   if (_memSession) return _memSession;
@@ -693,9 +682,6 @@ function clearSession() {
   try { sessionStorage.removeItem(SESSION_KEY); } catch(_){}
 }
 
-/* ============================================================
-   AUTH — login via RPC (password hash di DB dengan pgcrypto)
-============================================================ */
 async function doLogin() {
   if (!dbOk) { setA('landAlert','Konfigurasi Konfigurasi database dahulu! Hubungi administrator.','w'); return; }
   const email = val('liEmail').trim();
@@ -705,7 +691,6 @@ async function doLogin() {
   const btn = q('btnLogin'); btn.disabled = true;
   btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--text);border-radius:50%;animation:sp .6s linear infinite;"></span> Masuk...';
   try {
-    // fn_login: RPC yang cek email + verifikasi password hash dgn pgcrypto
     const { data, error } = await SB.rpc('fn_login', { p_email: email, p_password: pwd });
     if (error) throw error;
     if (!data || data.length === 0) throw new Error('Email atau password salah.');
@@ -723,18 +708,16 @@ async function doLogin() {
 }
 
 function enterApp() {
-  var land=q('pgLanding'), app=q('appShell');
-  land.className=''; land.style.cssText='display:none!important';
-  app.className='on'; app.style.cssText='display:flex!important;width:100%;min-height:100vh';
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
   buildSB();
   nav('dashboard');
   if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  var land=q('pgLanding'), app=q('appShell');
-  land.className=''; land.style.cssText='display:none!important';
-  app.className='on'; app.style.cssText='display:flex!important;width:100%;min-height:100vh';
+  q('pgLanding').classList.remove('on');
+  q('appShell').classList.add('on');
   buildEmployeeSB();
   nav('kpi');
 }
@@ -1119,8 +1102,18 @@ async function renderKpiForm(pc){
         <div class="card"><div class="card-h"><span class="card-t">Catatan &amp; Bukti Pendukung</span></div>
           <div class="card-b">
             <div class="fg"><label class="fl">Catatan / Deskripsi Capaian <span class="req">*</span></label>
-  <div id="kNoteEditor" contenteditable="true" style="min-height:80px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;background:#fff;font-family:inherit;font-size:.875rem;outline:none;line-height:1.6;" data-placeholder="Tulis deskripsi capaian Anda..."></div>
-</div>
+              <!-- CUSTOM SIMPLE EDITOR -->
+              <div class="se-wrap">
+                <div class="se-toolbar">
+                  <button type="button" onclick="document.execCommand('bold', false, null)" title="Bold"><b>B</b></button>
+                  <button type="button" onclick="document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
+                  <button type="button" onclick="document.execCommand('underline', false, null)" title="Underline"><u>U</u></button>
+                  <button type="button" onclick="document.execCommand('insertUnorderedList', false, null)" title="Bullet List">&#8226;</button>
+                  <button type="button" onclick="document.execCommand('insertOrderedList', false, null)" title="Numbered List">1.</button>
+                </div>
+                <div class="se-content" id="kNoteEditor" contenteditable="true" placeholder="Tulis deskripsi singkat capaian Anda di sini..."></div>
+              </div>
+            </div>
             <div class="row2">
               <div class="fg"><label class="fl">Bukti Utama (JPG/PNG/PDF) <span class="req">*</span></label>
                 <div class="ubox"><input type="file" id="kEF" accept=".jpg,.jpeg,.png,.pdf" onchange="onEviCh(this)"/>
@@ -1151,7 +1144,6 @@ async function renderKpiForm(pc){
   }catch(e){setA('kFA','Gagal: '+esc(e.message));}
   finally{
     ldr();
-    // RTE: no init needed
   }
 }
 function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e?.nik||''; q('kJab').value=e?.title||''; q('kLok').value=e?.location||''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
@@ -1228,10 +1220,14 @@ function onTtdCh(inp){
   const p=q('kTP'); p.src=URL.createObjectURL(f); p.style.display='block';
 }
 async function calcPreview(){
-  const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj'),
-    note=(q('kNoteEditor')?.innerText||'').trim(),
-    noteHtml=q('kNoteEditor')?.innerHTML||'',
-    eviF=q('kEF').files[0],ttdF=q('kTF').files[0];
+  const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj');
+  
+  // Ambil value dari Simple Editor
+  const noteEl = q('kNoteEditor');
+  const note = (noteEl?.innerText || '').trim();
+  const noteHtml = noteEl?.innerHTML || '';
+  
+  const eviF=q('kEF').files[0],ttdF=q('kTF').files[0];
   setA('kFA','');
   if(!eid)return setA('kFA','Pilih karyawan.');if(!pid)return setA('kFA','Pilih periode.');
   if(!oid)return setA('kFA','Pilih objective.');if(!note)return setA('kFA','Catatan wajib diisi.');
@@ -1415,7 +1411,7 @@ function addKR(kr=null){
     </select>
     <input class="fc" type="number" placeholder="Bobot%" value="${kr?.relative_weight??''}" data-f="w" style="font-size:.78rem;" min="0" max="100"/>
     <button class="ib d" onclick="this.closest('.kr-row').remove()">×</button>`;
-  // Handle custom unit
+  
   const unitSel=row.querySelector('[data-f="u"]');
   if(kr?.unit&&!['%','Skor','Bulan','Kali','Dokumen','Laporan','Kegiatan','Lokasi','Proyek','Kasus'].includes(kr.unit)){
     unitSel.value='__custom__';
@@ -1559,8 +1555,7 @@ async function saveEmp(){
 async function delE(id){if(!confirm('Hapus karyawan?'))return;try{await SB.from('employees').delete().eq('id',id);loadEmps();}catch(e){alert(e.message);}}
 
 /* ============================================================
-   ADMIN USERS — CRUD penuh, tanpa Supabase Auth
-   Password dikelola langsung di portal, hash via fn_upsert_user
+   ADMIN USERS
 ============================================================ */
 async function renderAdminUsers(pc){
   pc.innerHTML=`<div class="ph"><div><div class="ph-h">Manajemen User</div><div class="ph-sub">Tambah, edit, hapus user dan atur password langsung di portal</div></div>
@@ -1596,7 +1591,6 @@ async function saveUser(){
   if(!id&&(!pw||pw.length<6))return setA('mUA','Password minimal 6 karakter untuk user baru.');
   ldr('Menyimpan user...');
   try{
-    // fn_upsert_user: RPC yang handle hash password via pgcrypto
     const{data,error}=await SB.rpc('fn_upsert_user',{p_id:id||null,p_name:name,p_email:email,p_role:role,p_is_active:is_active,p_password:pw||null});
     if(error)throw error;
     closeM('mUser');loadUsers();
