@@ -782,7 +782,7 @@ function enterApp() {
     console.log("ENTER APP");
 
     q('pgLanding').style.display  = 'none';
-    q('appShell').style.cssText   = 'display:flex;width:100%;min-height:100vh;';
+    q('appShell').style.cssText = 'display:flex;width:100vw;min-height:100vh;';
 
     console.log("BUILD SIDEBAR");
     buildSB();
@@ -801,7 +801,7 @@ function enterApp() {
 function enterEmployeeApp() {
   try {
     q('pgLanding').style.display  = 'none';
-    q('appShell').style.cssText   = 'display:flex;width:100%;min-height:100vh;';
+    q('appShell').style.cssText = 'display:flex;width:100vw;min-height:100vh;';
     buildEmployeeSB();
     nav('kpi');
   } catch(e) {
