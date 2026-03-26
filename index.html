@@ -8,7 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<!-- Quill dipindah ke bawah body agar tidak blocking -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <style>
 /* ============================================================ BASE ============================================================ */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -73,7 +74,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .lr-cap p{font-size:.84rem;color:var(--muted);max-width:300px;margin:0 auto;}
 
 /* ============================================================ APP SHELL ============================================================ */
-#appShell{display:none;min-height:100vh;width:100%;}
+#appShell{display:none;min-height:100vh;}
 #appShell.on{display:flex;}
 .sidebar{width:var(--sw);min-height:100vh;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:.25s;}
 .sidebar.col{width:64px;}
@@ -83,7 +84,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-tog{background:none;border:none;cursor:pointer;color:var(--muted);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:.15s;flex-shrink:0;font-size:.8rem;}
 .sb-tog:hover{background:var(--slate-lt);}
 .sb-nav{flex:1;padding:10px 8px;overflow-y:auto;}
-.sb-sec{font-size:.63rem;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:8px 10px 4px;white-space:nowrap;overflow:hidden;}
+.sb-sec{font-size:.63rem;font-weight:800;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:8px 10px 4px;white-space:nowrap;overflow:hidden;margin-top:12px;}
+.sb-sec:first-child{margin-top:2px;}
 .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--slate);font-size:.82rem;font-weight:600;transition:.15s;white-space:nowrap;border:none;background:none;font-family:inherit;width:100%;text-align:left;}
 .sb-item:hover{background:var(--slate-lt);color:var(--text);}
 .sb-item.on{background:var(--yellow-lt);color:#7a6000;font-weight:700;}
@@ -96,7 +98,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sb-ui{overflow:hidden;}
 .sb-uname{font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sb-urole{font-size:.68rem;color:var(--muted);font-weight:600;}
-.main{flex:1;min-width:0;margin-left:var(--sw);min-height:100vh;transition:.25s;overflow-x:hidden;}
+.main{flex:1;margin-left:var(--sw);min-height:100vh;transition:.25s;overflow-x:hidden;width:0;min-width:0;}
 .main.exp{margin-left:64px;}
 .topbar{height:60px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;}
 .tb-l{display:flex;align-items:center;gap:12px;}
@@ -367,7 +369,6 @@ textarea.fc{resize:vertical;min-height:80px;}
   </div>
 </div>
 </div>
-</div>
 
 <!-- ============================================================ APP SHELL ============================================================ -->
 <div id="appShell">
@@ -433,15 +434,15 @@ textarea.fc{resize:vertical;min-height:80px;}
 </div>
 
 <div class="modal" id="mObj">
-  <div class="mbox">
-    <div class="mhd"><span class="mt" id="mOT">Tambah Objective</span><button class="mx" onclick="closeM('mObj')">&#10005;</button></div>
+  <div class="mbox" style="max-width:700px;">
+    <div class="mhd"><span class="mt" id="mOT">Tambah KPI</span><button class="mx" onclick="closeM('mObj')">&#10005;</button></div>
     <div id="mOA"></div>
     <div class="row2">
       <div class="fg"><label class="fl">Periode <span class="req">*</span></label><select class="fs" id="mOP"></select></div>
       <div class="fg"><label class="fl">Mode <span class="req">*</span></label>
         <select class="fs" id="mOM"><option value="UNCAPPED">UNCAPPED</option><option value="CAP100">CAP100</option><option value="SCALE5">SCALE5 (0–5)</option></select></div>
     </div>
-    <div class="fg"><label class="fl">Nama Objective <span class="req">*</span></label><input class="fc" id="mON" placeholder="Contoh: Tercapainya success rate layanan umum"/></div>
+    <div class="fg"><label class="fl">Nama KPI <span class="req">*</span></label><input class="fc" id="mON" placeholder="Contoh: Tercapainya success rate layanan umum"/></div>
     <div class="fg"><label class="fl">Formula / Keterangan</label><textarea class="fc" id="mOF" placeholder="Penjelasan singkat..."></textarea></div>
     <div class="sep"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -450,6 +451,12 @@ textarea.fc{resize:vertical;min-height:80px;}
     </div>
     <div id="mOKR"></div>
     <p style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px;">Total bobot semua KR = 100%</p>
+    <div class="sep"></div>
+    <div style="font-weight:800;font-size:.83rem;margin-bottom:8px;">&#9745; Dikenakan ke Karyawan</div>
+    <div id="mOEmpList" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">
+      <div style="padding:10px;font-size:.78rem;color:var(--muted);">Memuat daftar karyawan...</div>
+    </div>
+    <p style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px;">Centang karyawan yang mendapat KPI ini</p>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
       <button class="btn btn-out btn-sm" onclick="closeM('mObj')">Batal</button>
       <button class="btn btn-b btn-sm" onclick="saveObj()">Simpan</button>
@@ -472,7 +479,7 @@ textarea.fc{resize:vertical;min-height:80px;}
 </div>
 
 <div class="modal" id="mEmp">
-  <div class="mbox" style="max-width:500px;">
+  <div class="mbox" style="max-width:560px;">
     <div class="mhd"><span class="mt" id="mET">Tambah Karyawan</span><button class="mx" onclick="closeM('mEmp')">&#10005;</button></div>
     <div id="mEA"></div>
     <div class="row2">
@@ -485,6 +492,18 @@ textarea.fc{resize:vertical;min-height:80px;}
     </div>
     <div class="fg"><label class="fl">Status</label>
       <select class="fs" id="mES"><option value="true">Aktif</option><option value="false">Non-aktif</option></select>
+    </div>
+    <div class="sep"></div>
+    <p style="font-size:.76rem;font-weight:700;color:var(--muted);margin-bottom:10px;">&#128274; Akun Login Karyawan</p>
+    <div class="row2">
+      <div class="fg"><label class="fl">Username <span class="req">*</span></label><input class="fc" id="mEEmail" placeholder="e.g. budi.santoso"/></div>
+      <div class="fg"><label class="fl">Password <span id="mEPH" class="req">*</span></label>
+        <div class="pw-wrap">
+          <input class="fc" type="password" id="mEPw" placeholder="Min. 4 karakter" style="padding-right:36px;"/>
+          <button class="tg-pw" type="button" onclick="tgPw('mEPw',this)">&#128065;</button>
+        </div>
+        <p id="mEPwNote" style="font-size:.71rem;color:var(--muted);margin-top:4px;font-weight:600;"></p>
+      </div>
     </div>
     <input type="hidden" id="mEId"/>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
@@ -561,8 +580,6 @@ textarea.fc{resize:vertical;min-height:80px;}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 /* ============================================================
    CONFIG
@@ -579,14 +596,12 @@ const CFG = {
 let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-      SB = supabase.createClient(CFG.url, CFG.key, {
-        auth: { persistSession: false, autoRefreshToken: false }
-      });
-      dbOk = true;
-    }
+    SB = supabase.createClient(CFG.url, CFG.key, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    dbOk = true;
   }
-} catch(e) { console.warn('Supabase init gagal:', e.message); }
+} catch(e) { console.warn('Supabase:', e.message); }
 
 /* ============================================================
    STATE
@@ -657,11 +672,11 @@ async function doLogin() {
     if (error) throw error;
     if (!data || data.length === 0) throw new Error('Email atau password salah.');
     const raw = data[0];
-    const user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active };
+    const user = { id:raw.out_id, name:raw.out_name, email:raw.out_email, role:raw.out_role, is_active:raw.out_is_active, source:raw.out_source };
     if (!user.is_active) throw new Error('Akun Anda dinonaktifkan. Hubungi administrator.');
     S.user = user;
     saveSession(user);
-    enterApp();
+    if (user.role === 'employee') { enterEmployeeApp(); } else { enterApp(); }
   } catch(e) {
     setA('landAlert', esc(e.message));
     btn.disabled = false;
@@ -680,12 +695,134 @@ function enterApp() {
   } catch(e) { console.error('enterApp error:', e); }
 }
 
+function enterEmployeeApp() {
+  try {
+    q('pgLanding').classList.remove('on');
+    q('pgLanding').style.display = 'none';
+    q('appShell').classList.add('on');
+    buildEmployeeSB();
+    nav('kpi');
+  } catch(e) { console.error('enterEmployeeApp error:', e); }
+}
+
+function buildEmployeeSB() {
+  const nm  = S.user?.name || 'Karyawan';
+  const ini = nm.charAt(0).toUpperCase();
+  q('sbAv').textContent   = ini;  q('sbName').textContent = nm;
+  q('sbRole').textContent = 'Karyawan';
+  q('tbAv').textContent   = ini;  q('tbUN').textContent   = nm;
+  q('sbNav').innerHTML = `
+    <div class="sb-sec" style="margin-top:4px;">Menu</div>
+    <button class="sb-item" data-pg="kpi" onclick="nav('kpi')">
+      <span class="sb-icon">${IC.kpi}</span><span class="sb-lbl">Evaluasi KPI</span>
+    </button>
+    <button class="sb-item" data-pg="myResults" onclick="nav('myResults')">
+      <span class="sb-icon">${IC.guide}</span><span class="sb-lbl">Hasil Saya</span>
+    </button>`;
+}
+
+async function renderMyResults(pc) {
+  pc.innerHTML = `
+    <div class="ph"><div>
+      <div class="ph-h">Hasil Evaluasi Saya</div>
+      <div class="ph-sub">Riwayat penilaian KPI Anda</div>
+    </div></div>
+    <div id="myResWrap"><div class="empty"><p>Memuat...</p></div></div>`;
+  if(!dbOk) return;
+  try {
+    const{data}=await SB.from('kpi_submissions')
+      .select('*, obj:objective_id(name), period:period_id(label)')
+      .eq('employee_id', S.user.id)
+      .order('submitted_at',{ascending:false});
+    if(!data?.length){
+      q('myResWrap').innerHTML='<div class="empty"><span class="ei">◎</span><p>Belum ada hasil evaluasi.</p></div>';
+      return;
+    }
+    q('myResWrap').innerHTML=data.map(s=>`
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-h">
+          <div>
+            <div style="font-weight:800;">${esc(s.obj?.name||'-')}</div>
+            <div style="font-size:.76rem;color:var(--muted);">${esc(s.period?.label||'-')} &middot; ${new Date(s.submitted_at).toLocaleDateString('id-ID')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="text-align:center;">
+              <div style="font-size:1.6rem;font-weight:900;color:var(--green-d);">${s.sf_result||0}</div>
+              <div style="font-size:.68rem;font-weight:700;color:var(--muted);">SF</div>
+            </div>
+            <button class="btn btn-b btn-sm" onclick="downloadMyPdf('${s.id}')">&#8595; Unduh PDF</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e){
+    q('myResWrap').innerHTML=`<div class="empty"><p>Gagal memuat: ${esc(e.message)}</p></div>`;
+  }
+}
+
+async function downloadMyPdf(submissionId) {
+  ldr('Menyiapkan PDF...');
+  try {
+    const[sR,krR,evR]=await Promise.all([
+      SB.from('kpi_submissions').select('*, obj:objective_id(name,mode), period:period_id(label)').eq('id',submissionId).single(),
+      SB.from('kpi_submission_kr_values').select('*').eq('submission_id',submissionId),
+      SB.from('submission_evidence').select('*').eq('submission_id',submissionId).order('sort_order')
+    ]);
+    const s=sR.data,krs=krR.data||[],evis=evR.data||[];
+    const emp=S.user,d=new Date(s.submitted_at),dt=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+    const sfLabel=s.obj?.mode==='SCALE5'?(s.sf_result||0).toFixed(2)+' / 5':String(s.sf_result||0);
+    const rows=krs.map(v=>`<tr><td>${esc(v.kr_name||'-')}</td><td>${v.kr_target||0} ${v.kr_unit||''}</td><td>${v.real_value||0}</td><td>${v.kr_weight||0}%</td><td style="font-weight:800;">${(v.score_part||0).toFixed(2)}</td></tr>`).join('');
+    const eviHtml=evis.map(e=>e.file_type==='image'&&e.file_data?`<img src="${e.file_data}" style="max-height:300px;width:100%;object-fit:contain;border:1px solid #e8ecf0;border-radius:8px;"/>`:'').join('');
+    const sigHtml=s.signature_data?`<img src="${s.signature_data}" style="height:64px;width:auto;object-fit:contain;display:block;margin:0 auto;"/>`:'';
+    const tmp=document.createElement('div');
+    tmp.style.cssText='position:fixed;left:-9999px;top:0;width:760px;background:#fff;padding:40px;font-family:Plus Jakarta Sans,sans-serif;font-size:13px;';
+    tmp.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #1a56db;padding-bottom:14px;margin-bottom:20px;">
+        <div><div style="font-size:14px;font-weight:900;color:#1a56db;text-transform:uppercase;">Bukti Penilaian KPI</div>
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:3px;">${esc(s.period?.label||'-')}</div></div>
+        <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px 20px;text-align:center;">
+          <div style="font-size:36px;font-weight:900;color:#15803d;line-height:1;">${sfLabel}</div>
+          <div style="font-size:10px;font-weight:800;color:#94a3b8;">SKOR AKHIR</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+        <tr><td style="color:#94a3b8;width:100px;padding:3px 0;font-size:12px;">Nama</td><td style="font-weight:700;font-size:12px;">${esc(emp.name||'-')}</td></tr>
+        <tr><td style="color:#94a3b8;padding:3px 0;font-size:12px;">KPI</td><td style="color:#1a56db;font-weight:800;font-size:12px;">${esc(s.obj?.name||'-')}</td></tr>
+      </table>
+      <h6 style="font-weight:900;border-bottom:2px solid #e8ecf0;padding-bottom:8px;margin:0 0 10px;font-size:12px;">Rincian Key Results</h6>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead><tr>${['Key Result','Target','Realisasi','Bobot','Skor'].map(h=>`<th style="background:#f1f5f9;padding:7px 10px;border:1px solid #e8ecf0;font-weight:800;text-align:center;">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td colspan="3" style="text-align:right;padding:7px 10px;border:1px solid #e8ecf0;font-weight:800;background:#f1f5f9;">TOTAL</td>
+          <td style="border:1px solid #e8ecf0;background:#f1f5f9;"></td>
+          <td style="border:1px solid #e8ecf0;text-align:center;font-weight:800;background:#f1f5f9;color:#1a56db;">${(s.sum_score||0).toFixed(2)}</td></tr></tfoot>
+      </table>
+      <h6 style="font-weight:900;border-bottom:2px solid #e8ecf0;padding-bottom:8px;margin:16px 0 10px;font-size:12px;">Catatan</h6>
+      <div style="padding:10px 12px;background:#f1f5f9;border-radius:8px;font-size:12px;">${s.evidence_notes||'-'}</div>
+      ${eviHtml?`<h6 style="font-weight:900;border-bottom:2px solid #e8ecf0;padding-bottom:8px;margin:16px 0 10px;font-size:12px;">Lampiran Bukti</h6>${eviHtml}`:''}
+      <div style="margin-top:36px;text-align:center;">
+        <p style="margin-bottom:8px;font-size:12px;">Jakarta, ${dt}</p>
+        <p style="font-size:11px;margin-bottom:8px;">Yang Membuat,</p>
+        ${sigHtml}
+        <div style="font-weight:900;text-decoration:underline;text-transform:uppercase;margin-top:7px;font-size:12px;">${esc(emp.name||'-')}</div>
+      </div>`;
+    document.body.appendChild(tmp);
+    const c=await html2canvas(tmp,{scale:2,backgroundColor:'#fff',useCORS:true});
+    document.body.removeChild(tmp);
+    const img=c.toDataURL('image/jpeg',.98),{jsPDF}=window.jspdf||{};
+    if(!jsPDF)throw new Error('jsPDF tidak tersedia.');
+    const t=new jsPDF('p','mm','a4'),pr=t.getImageProperties(img);
+    const pw=210,iw=pw,ih=(pr.height*iw)/pr.width;
+    if(ih<=297){const p=new jsPDF('p','mm',[pw,ih]);p.addImage(img,'JPEG',0,0,iw,ih);p.save(sfn('KPI_'+emp.name)+'.pdf');}
+    else{const p=new jsPDF('p','mm','a4');let hl=ih,pos=0;p.addImage(img,'JPEG',0,pos,iw,ih);hl-=297;while(hl>0){pos-=297;p.addPage();p.addImage(img,'JPEG',0,pos,iw,ih);hl-=297;}p.save(sfn('KPI_'+emp.name)+'.pdf');}
+  }catch(e){alert('Gagal unduh PDF: '+e.message);}finally{ldr();}
+}
+
 function doLogout() {
   closeM('mLogout');
   clearSession();
   S.user = null;
   q('appShell').classList.remove('on');
-  q('pgLanding').style.display = '';
+  q('pgLanding').style.display = ''; // reset inline style
   q('pgLanding').classList.add('on');
   q('liPwd').value = '';
   setA('landAlert','');
@@ -718,9 +855,9 @@ function buildSB() {
   ];
   if (isAdm) items.push(
     {sec:'Administrasi'},
-    {pg:'adminKpi',ic:IC.adminKpi,lb:'Manajemen KPI'},
+    {pg:'adminKpi',ic:IC.adminKpi,lb:'CRUD KPI'},
     {pg:'adminEmp',ic:IC.adminEmp,lb:'Data Karyawan'},
-    {pg:'adminUsers',ic:IC.adminUsers,lb:'User'},
+    {pg:'adminUsers',ic:IC.adminUsers,lb:'Manajemen User'},
     {pg:'adminMenus',ic:IC.adminMenus,lb:'Menu Info'},
   );
   q('sbNav').innerHTML = items.map(n => n.sec
@@ -739,15 +876,16 @@ function togSB() {
 /* ============================================================
    ROUTING
 ============================================================ */
-const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
+const PG = { dashboard:'Dashboard', kpi:'Evaluasi KPI', myResults:'Hasil Saya', guide:'Panduan', adminKpi:'Manajemen KPI', adminEmp:'Data Karyawan', adminUsers:'Manajemen User', adminMenus:'Menu Info' };
 function nav(page) {
   q('pgTitle').textContent = PG[page] || page;
   document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('on', b.dataset.pg===page));
   window.scrollTo(0,0);
   const pc = q('pgC');
-  if(page==='dashboard')   renderDash(pc);
-  else if(page==='kpi')    renderKpiForm(pc);
-  else if(page==='guide')  renderGuide(pc);
+  if(page==='dashboard')       renderDash(pc);
+  else if(page==='kpi')        renderKpiForm(pc);
+  else if(page==='myResults')  renderMyResults(pc);
+  else if(page==='guide')      renderGuide(pc);
   else if(page==='adminKpi')   renderAdminKpi(pc);
   else if(page==='adminEmp')   renderAdminEmp(pc);
   else if(page==='adminUsers') renderAdminUsers(pc);
@@ -783,43 +921,90 @@ async function renderDash(pc) {
   pc.innerHTML=`
     <div class="ph"><div><div class="ph-h">Dashboard</div><div class="ph-sub">Ringkasan aktivitas evaluasi KPI</div></div></div>
     <div class="stats">
-      <div class="stat y"><div class="stat-ico">&#9638;</div><div class="stat-v" id="dSt">—</div><div class="stat-l">Total Penilaian</div></div>
-      <div class="stat b"><div class="stat-ico">&#9679;</div><div class="stat-v" id="dSe">—</div><div class="stat-l">Karyawan Dinilai</div></div>
-      <div class="stat g"><div class="stat-ico">&#9661;</div><div class="stat-v" id="dSd">—</div><div class="stat-l">Hari Ini</div></div>
-      <div class="stat o"><div class="stat-ico">&#9670;</div><div class="stat-v" id="dSp">—</div><div class="stat-l">Periode Aktif</div></div>
+      <div class="stat y"><div class="stat-ico">${IC.dashboard}</div><div class="stat-v" id="dSt">—</div><div class="stat-l">Total Penilaian</div></div>
+      <div class="stat b"><div class="stat-ico">${IC.kpi}</div><div class="stat-v" id="dSe">—</div><div class="stat-l">Karyawan Dinilai</div></div>
+      <div class="stat g"><div class="stat-ico">${IC.adminEmp}</div><div class="stat-v" id="dSd">—</div><div class="stat-l">Sudah Evaluasi</div></div>
+      <div class="stat o"><div class="stat-ico">${IC.guide}</div><div class="stat-v" id="dSp">—</div><div class="stat-l">Belum Evaluasi</div></div>
     </div>
     <div class="card">
-      <div class="card-h">
-        <span class="card-t">Log Penilaian KPI</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <div class="card-b" style="padding-bottom:0;">
+        <div class="tabs">
+          <button class="tab-b on" onclick="dashTab('status',this)">Status Evaluasi</button>
+          <button class="tab-b" onclick="dashTab('log',this)">Log Penilaian</button>
+        </div>
+      </div>
+      <div id="dashStatusPane">
+        <div style="padding:14px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+          <select class="fs" id="dStatPFil" style="padding:6px 10px;font-size:.79rem;" onchange="filterDashStatus()"><option value="">Semua Periode</option></select>
+        </div>
+        <div class="tw"><table class="tbl">
+          <thead><tr><th>Karyawan</th><th>KPI</th><th>Periode</th><th>Status</th><th>Skor</th><th>SF</th><th></th></tr></thead>
+          <tbody id="dStatBody"></tbody>
+        </table></div>
+        <div id="dStatEmpty" class="empty" style="display:none;"><span class="ei">&#9675;</span><p>Belum ada data.</p></div>
+      </div>
+      <div id="dashLogPane" style="display:none;">
+        <div style="padding:14px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);">
           <input class="fc" id="dSrch" placeholder="Cari nama..." style="width:180px;padding:6px 10px;font-size:.79rem;" oninput="filterDash()"/>
           <select class="fs" id="dPFil" style="padding:6px 10px;font-size:.79rem;" onchange="filterDash()"><option value="">Semua Periode</option></select>
         </div>
+        <div class="tw"><table class="tbl">
+          <thead><tr><th>#</th><th>Karyawan</th><th>KPI</th><th>Periode</th><th>Skor</th><th>SF</th><th>Waktu Submit</th><th></th></tr></thead>
+          <tbody id="dBody"></tbody>
+        </table></div>
+        <div id="dEm" class="empty" style="display:none;"><span class="ei">&#9675;</span><p>Belum ada data penilaian.</p></div>
       </div>
-      <div class="tw"><table class="tbl">
-        <thead><tr><th>#</th><th>Karyawan</th><th>Objective KPI</th><th>Periode</th><th>Skor</th><th>SF</th><th>Bukti</th><th>Waktu Submit</th><th></th></tr></thead>
-        <tbody id="dBody"></tbody>
-      </table></div>
-      <div id="dEm" class="empty" style="display:none;"><span class="ei">&#9703;</span><p>Belum ada data penilaian.</p></div>
     </div>`;
-  if(!dbOk){q('dEm').style.display='block';q('dEm').innerHTML='<span class="ei">&#9888;</span><p>Konfigurasi database dahulu!.</p>';return;}
-  ldr('Memuat...');
+  if(!dbOk){q('dStatEmpty').style.display='block';return;}
+  ldr('Memuat dashboard...');
   try {
-    const[sR,pR]=await Promise.all([
-      SB.from('kpi_submissions').select('*, emp:user_id(name,title), obj:objective_id(name), period:period_id(label)').order('submitted_at',{ascending:false}).limit(500),
+    const[statusRes,subRes,perRes]=await Promise.all([
+      SB.from('v_evaluation_status').select('*').order('employee_name'),
+      SB.from('kpi_submissions').select('*, emp:employee_id(name,title), obj:objective_id(name), period:period_id(label)').order('submitted_at',{ascending:false}).limit(500),
       SB.from('kpi_periods').select('*').eq('is_active',true)
     ]);
-    S._dashAll=sR.data||[];
-    const today=new Date().toDateString();
+    S._dashStatus=statusRes.data||[];
+    S._dashAll=subRes.data||[];
+    const done=S._dashStatus.filter(r=>r.is_done).length;
+    const notDone=S._dashStatus.filter(r=>!r.is_done).length;
     q('dSt').textContent=S._dashAll.length;
-    q('dSe').textContent=new Set(S._dashAll.map(s=>s.user_id)).size;
-    q('dSd').textContent=S._dashAll.filter(s=>new Date(s.submitted_at).toDateString()===today).length;
-    q('dSp').textContent=(pR.data||[]).length;
-    const pf=q('dPFil');
-    [...new Set(S._dashAll.map(s=>s.period?.label).filter(Boolean))].forEach(l=>pf.add(new Option(l,l)));
+    q('dSe').textContent=new Set(S._dashAll.map(s=>s.employee_id)).size;
+    q('dSd').textContent=done;
+    q('dSp').textContent=notDone;
+    const periods=perRes.data||[];
+    ['dStatPFil','dPFil'].forEach(selId=>{
+      const sel=q(selId);if(!sel)return;
+      sel.innerHTML='<option value="">Semua Periode</option>';
+      periods.forEach(p=>sel.add(new Option(p.label,p.id)));
+    });
+    renderDashStatus(S._dashStatus);
     renderDashRows(S._dashAll);
-  } catch(e){q('dEm').style.display='block';q('dEm').innerHTML=`<span class="ei">&#9888;</span><p>${esc(e.message)}</p>`;}
+  }catch(e){console.error('Dashboard error:',e);}
   finally{ldr();}
+}
+function dashTab(tab,btn){
+  document.querySelectorAll('#pgC .tab-b').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  q('dashStatusPane').style.display=tab==='status'?'block':'none';
+  q('dashLogPane').style.display=tab==='log'?'block':'none';
+}
+function filterDashStatus(){
+  const pf=val('dStatPFil');
+  renderDashStatus(S._dashStatus.filter(r=>!pf||String(r.period_id)===pf));
+}
+function renderDashStatus(list){
+  const tb=q('dStatBody'),em=q('dStatEmpty');
+  if(!list||!list.length){if(tb)tb.innerHTML='';if(em)em.style.display='block';return;}
+  if(em)em.style.display='none';
+  tb.innerHTML=list.map(r=>`<tr>
+    <td style="font-weight:700;">${esc(r.employee_name)}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.objective_name)}</td>
+    <td><span class="badge bgr">${esc(r.period_label)}</span></td>
+    <td>${r.is_done?'<span class="badge bg">&#10003; Sudah</span>':'<span class="badge bo">&#10007; Belum</span>'}</td>
+    <td>${r.is_done?(r.sum_score||0).toFixed(2):'—'}</td>
+    <td>${r.is_done?`<span class="badge bb">${r.sf_result||0}</span>`:'—'}</td>
+    <td>${r.is_done&&r.submission_id?`<button class="ib" onclick="viewDetail('${r.submission_id}')" title="Detail">&#128065;</button>`:''}</td>
+  </tr>`).join('');
 }
 function filterDash(){
   const q2=val('dSrch').toLowerCase(),pf=val('dPFil');
@@ -827,18 +1012,17 @@ function filterDash(){
 }
 function renderDashRows(list){
   const tb=q('dBody'),em=q('dEm');
-  if(!list.length){tb.innerHTML='';em.style.display='block';em.innerHTML='<span class="ei">&#9703;</span><p>Belum ada data.</p>';return;}
-  em.style.display='none';
+  if(!list||!list.length){if(tb)tb.innerHTML='';if(em){em.style.display='block';em.innerHTML='<span class="ei">&#9675;</span><p>Belum ada data.</p>';}return;}
+  if(em)em.style.display='none';
   tb.innerHTML=list.map((s,i)=>{
     const sf=s.sf_result,sc=sf>=110?'bg':sf>=100?'bb':sf>=90?'bo':'br';
     return`<tr>
       <td style="color:var(--muted);font-size:.76rem;">${i+1}</td>
       <td style="font-weight:700;">${esc(s.emp?.name||'-')}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(s.obj?.name||'')}">${esc(s.obj?.name||'-')}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.obj?.name||'-')}</td>
       <td><span class="badge bgr">${esc(s.period?.label||'-')}</span></td>
       <td style="font-weight:700;">${(s.sum_score||0).toFixed(2)}</td>
       <td><span class="badge ${sc}">${sf||0}</span></td>
-      <td>${s.has_evidence?'<span class="badge bg">Ada</span>':'<span class="badge bgr">—</span>'}</td>
       <td style="font-size:.76rem;color:var(--muted);">${new Date(s.submitted_at).toLocaleString('id-ID')}</td>
       <td><button class="ib" onclick="viewDetail('${s.id}')" title="Detail">&#128065;</button></td>
     </tr>`;
@@ -940,23 +1124,19 @@ async function renderKpiForm(pc){
     (eR.data||[]).forEach(e=>{S._empMap[e.id]=e;eS.add(new Option(e.name,e.id));});
     const pS=q('kPer'); pS.innerHTML='<option value="">-- Pilih Tahun --</option>';
     (pR.data||[]).forEach(p=>pS.add(new Option(p.label,p.id)));
-  } catch(e){ setA('kFA','Gagal memuat data: '+esc(e.message)); }
+  }catch(e){setA('kFA','Gagal: '+esc(e.message));}
   finally{
     ldr();
-    // Init Quill setelah DOM siap (opsional)
+    // Init Quill setelah DOM siap
     setTimeout(()=>{
-      try {
-        if(typeof Quill !== 'undefined' && q('kNoteEditor')) {
-          if(window._quill) { try{window._quill=null;}catch(_){} }
-          window._quill = new Quill('#kNoteEditor',{
-            theme:'snow',
-            placeholder:'Tulis deskripsi singkat capaian Anda...',
-            modules:{toolbar:[['bold','italic','underline'],
-              [{list:'ordered'},{list:'bullet'}],['clean']]}
-          });
-        }
-      } catch(e2){ console.warn('Quill init gagal:', e2.message); }
-    }, 80);
+      if(window._quill) window._quill = null;
+      if(q('kNoteEditor')) window._quill = new Quill('#kNoteEditor',{
+        theme:'snow',
+        placeholder:'Tulis deskripsi singkat capaian Anda...',
+        modules:{toolbar:[['bold','italic','underline'],['clean'],
+          [{list:'ordered'},{list:'bullet'}]]}
+      });
+    },50);
   }
 }
 function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e?.nik||''; q('kJab').value=e?.title||''; q('kLok').value=e?.location||''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
@@ -964,25 +1144,19 @@ function onKPer(){ q('kOC').style.display='none'; q('kKS').style.display='none';
 async function loadKObjs(){
   const eid=val('kEmp'),pid=val('kPer'); if(!eid||!pid)return;
   try{
-    const[oR,wR]=await Promise.all([
+    const[oR,aR]=await Promise.all([
       SB.from('kpi_objectives').select('*').eq('period_id',pid).order('sort_order'),
-      SB.from('employee_kpi_weights').select('*').eq('user_id',eid)
+      SB.from('kpi_assignments').select('*').eq('employee_id',eid)
     ]);
-    const wMap=Object.fromEntries((wR.data||[]).map(w=>[w.objective_id,w.weight]));
+    const assigned=new Set((aR.data||[]).map(a=>a.objective_id));
     S._kpiObjs=oR.data||[];
-    S._kpiWeightMap=wMap;
-    const sel=q('kObj'); sel.innerHTML='<option value="">-- Pilih Objective --</option>';
-    // Tampilkan semua objective; yang sudah punya bobot diberi tanda
-    S._kpiObjs.forEach(o=>{
-      const hasW=wMap[o.id]!==undefined;
-      const opt=new Option(o.name+(hasW?'':' (bobot belum diset)'), o.id);
-      sel.add(opt);
-    });
-    if(!S._kpiObjs.length){
-      setA('kFA','Tidak ada KPI untuk periode ini.','w');
+    const sel=q('kObj'); sel.innerHTML='<option value="">-- Pilih KPI --</option>';
+    S._kpiObjs.filter(o=>assigned.has(o.id)).forEach(o=>sel.add(new Option(o.name,o.id)));
+    if(!S._kpiObjs.filter(o=>assigned.has(o.id)).length){
+      setA('kFA','Tidak ada KPI yang diassign untuk karyawan ini pada periode ini.','w');
     }
     q('kOC').style.display='block';
-  }catch(e){setA('kFA','Gagal memuat objective: '+esc(e.message));}
+  }catch(e){setA('kFA','Gagal memuat KPI: '+esc(e.message));}
 }
 async function onKObj(){
   const oid=val('kObj'); if(!oid){q('kKS').style.display='none';return;}
@@ -1116,14 +1290,31 @@ async function expPdf(){
 function sfn(s){return String(s||'').replace(/[\\/:"*?<>|]/g,'-').replace(/\s+/g,' ').trim();}
 async function saveToDB(){
   const st=S.kpiSt;if(st.savedToDb){alert('Sudah disimpan.');return;}
-  if(!dbOk){alert('Konfigurasi database dahulu!.');return;}
+  if(!dbOk){alert('Konfigurasi database dahulu!');return;}
   ldr('Menyimpan semua data...');
   try{
-    const uid=S.user?.id,sid=crypto.randomUUID();
+    const sid=crypto.randomUUID();
+    const isEmp=S.user?.role==='employee';
     const eviB64=await fileToB64(st.eviFile),ttdB64=await fileToB64(st.ttdFile),eviType=isPdf(st.eviFile)?'pdf':'image';
-    const{error:sE}=await SB.from('kpi_submissions').insert({id:sid,user_id:st.emp.id,objective_id:st.obj.id,period_id:st.periodId,submitted_by:uid,sum_score:st.sum,sf_result:st.sfv,evidence_notes:st.note,has_evidence:true,signature_data:ttdB64,signature_filename:st.ttdFile.name});
+    const{error:sE}=await SB.from('kpi_submissions').insert({
+      id:sid,
+      employee_id:st.emp.id,
+      objective_id:st.obj.id,
+      period_id:st.periodId,
+      submitted_by_user:isEmp?null:S.user?.id,
+      submitted_by_emp:isEmp?S.user?.id:null,
+      sum_score:st.sum,
+      sf_result:st.sfv,
+      evidence_notes:st.noteHtml||st.note,
+      has_evidence:true,
+      signature_data:ttdB64,
+      signature_filename:st.ttdFile.name
+    });
     if(sE)throw sE;
-    if(st.det?.length){const{error:kE}=await SB.from('kpi_submission_kr_values').insert(st.det.map(d=>({submission_id:sid,kr_id:d.k.id,kr_name:d.k.kr_name,kr_target:d.target,kr_unit:d.k.unit,kr_weight:d.k.relative_weight,real_value:d.rv,score_part:d.sp})));if(kE)throw kE;}
+    if(st.det?.length){
+      const{error:kE}=await SB.from('kpi_submission_kr_values').insert(st.det.map(d=>({submission_id:sid,kr_id:d.k.id,kr_name:d.k.kr_name,kr_target:d.target,kr_unit:d.k.unit,kr_weight:d.k.relative_weight,real_value:d.rv,score_part:d.sp})));
+      if(kE)throw kE;
+    }
     const{error:eE}=await SB.from('submission_evidence').insert({submission_id:sid,sort_order:0,file_name:st.eviFile.name,file_type:eviType,file_size:st.eviFile.size,file_data:eviB64});
     if(eE)throw eE;
     st.savedToDb=true;const btn=q('btnSave');btn.disabled=true;btn.innerHTML='&#10003; Tersimpan';
@@ -1224,19 +1415,71 @@ function addKR(kr=null){
   };
   q('mOKR').appendChild(row);
 }
-function openMO(){if(!S._periods.length){alert('Tambah periode terlebih dahulu.');return;}popOP();q('mOT').textContent='Tambah Objective';q('mON').value='';q('mOF').value='';q('mOM').value='UNCAPPED';delete q('mObj').dataset.eid;setA('mOA','');q('mOKR').innerHTML='';addKR();addKR();openM('mObj');}
-function openMOE(oid){const o=S._objectives.find(x=>x.id===oid);if(!o)return;popOP();q('mOT').textContent='Edit Objective';q('mOP').value=o.period_id;q('mON').value=o.name;q('mOF').value=o.formula||'';q('mOM').value=o.mode;q('mObj').dataset.eid=oid;setA('mOA','');q('mOKR').innerHTML='';const krs=o.kpi_key_results||[];if(krs.length)krs.forEach(k=>addKR(k));else{addKR();addKR();}openM('mObj');}
+async function openMO(){
+  if(!S._periods.length){alert('Tambah periode terlebih dahulu.');return;}
+  popOP(); q('mOT').textContent='Tambah KPI'; q('mON').value=''; q('mOF').value=''; q('mOM').value='UNCAPPED';
+  delete q('mObj').dataset.eid; setA('mOA',''); q('mOKR').innerHTML='';
+  addKR();
+  await loadEmpCheckList([]);
+  openM('mObj');
+}
+async function openMOE(oid){
+  const o=S._objectives.find(x=>x.id===oid); if(!o)return;
+  popOP(); q('mOT').textContent='Edit KPI'; q('mOP').value=o.period_id;
+  q('mON').value=o.name; q('mOF').value=o.formula||''; q('mOM').value=o.mode;
+  q('mObj').dataset.eid=oid; setA('mOA',''); q('mOKR').innerHTML='';
+  const krs=o.kpi_key_results||[];
+  if(krs.length) krs.forEach(k=>addKR(k)); else addKR();
+  const{data:assigned}=await SB.from('kpi_assignments').select('employee_id').eq('objective_id',oid);
+  await loadEmpCheckList((assigned||[]).map(a=>a.employee_id));
+  openM('mObj');
+}
+async function loadEmpCheckList(checkedIds=[]){
+  try{
+    const{data}=await SB.from('employees').select('id,name').eq('is_active',true).order('name');
+    q('mOEmpList').innerHTML=!(data||[]).length
+      ?'<div style="padding:10px;font-size:.78rem;color:var(--muted);">Belum ada karyawan aktif.</div>'
+      :(data||[]).map(e=>`
+        <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600;">
+          <input type="checkbox" value="${e.id}" ${checkedIds.includes(e.id)?'checked':''} style="accent-color:var(--blue);width:15px;height:15px;flex-shrink:0;"/>
+          ${esc(e.name)}
+        </label>`).join('');
+  }catch(_){
+    q('mOEmpList').innerHTML='<div style="padding:10px;font-size:.78rem;color:var(--muted);">Gagal memuat karyawan.</div>';
+  }
+}
 async function saveObj(){
   const eid=q('mObj').dataset.eid,name=val('mON').trim(),formula=val('mOF').trim(),mode=val('mOM'),pid=val('mOP');
-  setA('mOA','');if(!name||!pid)return setA('mOA','Nama dan periode wajib diisi.');
-  const krs=[...(q('mOKR')?.querySelectorAll('.kr-row')||[])].map((r,i)=>({kr_name:r.querySelector('[data-f="n"]').value.trim(),target:parseFloat(r.querySelector('[data-f="t"]').value)||0,unit:r.querySelector('[data-f="u"]').value.trim(),relative_weight:parseFloat(r.querySelector('[data-f="w"]').value)||100,sort_order:i}));
-  if(krs.some(k=>!k.kr_name))return setA('mOA','Nama KR tidak boleh kosong.');if(!krs.length)return setA('mOA','Minimal 1 KR.');
-  try{ldr('Menyimpan...');let oid=eid;
-    if(eid){await SB.from('kpi_objectives').update({name,formula,mode,period_id:pid}).eq('id',eid);await SB.from('kpi_key_results').delete().eq('objective_id',eid);}
-    else{const{data,error}=await SB.from('kpi_objectives').insert({period_id:pid,name,formula,mode,sort_order:0}).select().single();if(error)throw error;oid=data.id;}
-    await SB.from('kpi_key_results').insert(krs.map(k=>({...k,objective_id:oid})));
-    closeM('mObj');loadAK();
-  }catch(e){setA('mOA',esc(e.message));}finally{ldr();}
+  setA('mOA','');
+  if(!name||!pid) return setA('mOA','Nama KPI dan periode wajib diisi.');
+  const krs=[...(q('mOKR')?.querySelectorAll('.kr-row')||[])].map((r,i)=>({
+    kr_name:r.querySelector('[data-f="n"]').value.trim(),
+    target:parseFloat(r.querySelector('[data-f="t"]')?.value)||0,
+    unit:r.querySelector('[data-f="u"]')?.value||'',
+    relative_weight:parseFloat(r.querySelector('[data-f="w"]')?.value)||100,
+    sort_order:i
+  }));
+  if(krs.some(k=>!k.kr_name)) return setA('mOA','Nama Key Result tidak boleh kosong.');
+  if(!krs.length) return setA('mOA','Minimal 1 Key Result.');
+  const checkedEmps=[...q('mOEmpList').querySelectorAll('input[type=checkbox]:checked')].map(cb=>cb.value);
+  try{
+    ldr('Menyimpan KPI...');
+    let objId=eid;
+    if(eid){
+      await SB.from('kpi_objectives').update({name,formula,mode,period_id:pid}).eq('id',eid);
+      await SB.from('kpi_key_results').delete().eq('objective_id',eid);
+      await SB.from('kpi_assignments').delete().eq('objective_id',eid);
+    } else {
+      const{data,error}=await SB.from('kpi_objectives').insert({period_id:pid,name,formula,mode,sort_order:0}).select().single();
+      if(error) throw error;
+      objId=data.id;
+    }
+    await SB.from('kpi_key_results').insert(krs.map(k=>({...k,objective_id:objId})));
+    if(checkedEmps.length){
+      await SB.from('kpi_assignments').insert(checkedEmps.map(empId=>({employee_id:empId,objective_id:objId,weight:0})));
+    }
+    closeM('mObj'); loadAK();
+  }catch(e){ setA('mOA',esc(e.message)); }finally{ ldr(); }
 }
 async function delO(id){if(!confirm('Hapus objective ini?'))return;try{await SB.from('kpi_objectives').delete().eq('id',id);loadAK();}catch(e){alert(e.message);}}
 let _wOid='';
@@ -1254,7 +1497,7 @@ async function saveWeights(){const inp=[...q('mWR').querySelectorAll('input[data
    ADMIN EMPLOYEES
 ============================================================ */
 async function renderAdminEmp(pc){
-  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Data Karyawan</div><div class="ph-sub">Kelola data karyawan</div></div><button class="btn btn-b btn-sm" onclick="openME()">+ Tambah</button></div>
+  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Data Karyawan</div><div class="ph-sub">Kelola data karyawan GA</div></div><button class="btn btn-b btn-sm" onclick="openME()">+ Tambah</button></div>
     <div class="card"><div class="tw"><table class="tbl"><thead><tr><th>#</th><th>Nama</th><th>NIK</th><th>Jabatan</th><th>Lokasi</th><th>Status</th><th></th></tr></thead><tbody id="empB"></tbody></table></div>
     <div id="empEm" class="empty" style="display:none;"><span class="ei">&#9679;</span><p>Belum ada karyawan.</p></div></div>`;loadEmps();}
 async function loadEmps(){if(!dbOk)return;ldr();
@@ -1264,10 +1507,40 @@ async function loadEmps(){if(!dbOk)return;ldr();
       <td><span class="badge ${e.is_active?'bg':'bgr'}">${e.is_active?'Aktif':'Non-aktif'}</span></td>
       <td><button class="ib" onclick="openMEE('${e.id}')">&#9998;</button><button class="ib d" onclick="delE('${e.id}')">&#215;</button></td></tr>`).join('');}catch(_){}finally{ldr();}
 }
-function openME(){q('mET').textContent='Tambah Karyawan';q('mEId').value='';['mEN','mENik','mEJ','mEL'].forEach(id=>q(id).value='');q('mES').value='true';setA('mEA','');openM('mEmp');}
-function openMEE(id){const e=S._emps.find(x=>x.id===id);if(!e)return;q('mET').textContent='Edit Karyawan';q('mEId').value=id;q('mEN').value=e.name||'';q('mENik').value=e.nik||'';q('mEJ').value=e.title||'';q('mEL').value=e.location||'';q('mES').value=String(e.is_active);setA('mEA','');openM('mEmp');}
-async function saveEmp(){const id=val('mEId'),name=val('mEN').trim(),nik=val('mENik').trim(),title=val('mEJ').trim(),location=val('mEL').trim(),is_active=val('mES')==='true';setA('mEA','');if(!name)return setA('mEA','Nama wajib diisi.');
-  try{ldr();const p={name,nik,title,location,is_active};if(id)await SB.from('employees').update(p).eq('id',id);else await SB.from('employees').insert(p);closeM('mEmp');loadEmps();}catch(e){setA('mEA',esc(e.message));}finally{ldr();}}
+function openME(){
+  q('mET').textContent='Tambah Karyawan'; q('mEId').value='';
+  ['mEN','mENik','mEJ','mEL','mEEmail','mEPw'].forEach(id=>q(id)&&(q(id).value=''));
+  q('mES').value='true'; q('mEPH').textContent='*'; q('mEPwNote').textContent='';
+  setA('mEA',''); openM('mEmp');
+}
+function openMEE(id){
+  const e=S._emps.find(x=>x.id===id); if(!e)return;
+  q('mET').textContent='Edit Karyawan'; q('mEId').value=id;
+  q('mEN').value=e.name||''; q('mENik').value=e.nik||'';
+  q('mEJ').value=e.title||''; q('mEL').value=e.location||'';
+  q('mEEmail').value=e.email||''; q('mEPw').value='';
+  q('mES').value=String(e.is_active);
+  q('mEPH').textContent='(opsional)'; q('mEPwNote').textContent='Kosongkan jika tidak ingin mengubah password.';
+  setA('mEA',''); openM('mEmp');
+}
+async function saveEmp(){
+  const id=val('mEId'), name=val('mEN').trim(), nik=val('mENik').trim(),
+    title=val('mEJ').trim(), location=val('mEL').trim(),
+    email=val('mEEmail').trim(), pw=val('mEPw'), is_active=val('mES')==='true';
+  setA('mEA','');
+  if(!name)  return setA('mEA','Nama wajib diisi.');
+  if(!email) return setA('mEA','Username wajib diisi.');
+  if(!id && (!pw||pw.length<4)) return setA('mEA','Password minimal 4 karakter untuk karyawan baru.');
+  try{
+    ldr('Menyimpan...');
+    const{error}=await SB.rpc('fn_upsert_employee',{
+      p_id:id||null, p_name:name, p_nik:nik, p_title:title,
+      p_location:location, p_email:email, p_is_active:is_active, p_password:pw||null
+    });
+    if(error) throw error;
+    closeM('mEmp'); loadEmps();
+  }catch(e){ setA('mEA',esc(e.message)); }finally{ ldr(); }
+}
 async function delE(id){if(!confirm('Hapus karyawan?'))return;try{await SB.from('employees').delete().eq('id',id);loadEmps();}catch(e){alert(e.message);}}
 
 /* ============================================================
@@ -1324,7 +1597,7 @@ async function delU(id){
    ADMIN MENUS
 ============================================================ */
 async function renderAdminMenus(pc){
-  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Menu Informasi</div><div class="ph-sub">Konten di halaman utama</div></div><button class="btn btn-b btn-sm" onclick="openMM()">+ Tambah</button></div>
+  pc.innerHTML=`<div class="ph"><div><div class="ph-h">Menu Informasi</div><div class="ph-sub">Konten accordion di halaman login</div></div><button class="btn btn-b btn-sm" onclick="openMM()">+ Tambah</button></div>
     <div class="card"><div class="card-b" style="padding-bottom:0;"><div class="tabs"><button class="tab-b on" onclick="mMTab('guide',this)">Panduan</button><button class="tab-b" onclick="mMTab('info',this)">Info / FAQ</button></div></div>
     <div class="tw"><table class="tbl"><thead><tr><th>#</th><th>Judul</th><th>Konten</th><th>Urutan</th><th>Status</th><th></th></tr></thead><tbody id="menuB"></tbody></table></div>
     <div id="menuEm" class="empty" style="display:none;"><span class="ei">&#9675;</span><p>Belum ada item.</p></div></div>`;loadMenus();}
@@ -1345,19 +1618,17 @@ async function saveMenu(){const id=val('mMId'),category=val('mMCat'),title=val('
 async function delM(id){if(!confirm('Hapus item?'))return;try{await SB.from('menu_items').delete().eq('id',id);loadMenus();loadLandMenus();}catch(e){alert(e.message);}}
 
 /* ============================================================
-   INIT — landing selalu tampil, semua step dibungkus try-catch
+   INIT
 ============================================================ */
 (async function init(){
-  // landing sudah class="on" di HTML — selalu tampil tanpa JS
   try{
     const saved = loadSession();
-    if (saved && saved.id) {
+    if(saved && saved.id){
       S.user = saved;
-      enterApp();
+      if(saved.role==='employee'){ enterEmployeeApp(); } else { enterApp(); }
       return;
     }
   } catch(_){}
-  // Muat accordion menu (opsional, tidak crash jika gagal)
   try { if(dbOk) loadLandMenus(); } catch(_){}
 })();
 </script>
