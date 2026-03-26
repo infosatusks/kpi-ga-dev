@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
 <style>
 /* ============================================================ BASE ============================================================ */
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -615,27 +617,16 @@ const CFG = {
 /* ============================================================
    INIT SUPABASE (tanpa Auth — hanya sebagai database client)
 ============================================================ */
-// Memory storage agar tidak crash di Safari (Tracking Prevention)
-const _noStorage = {
-  getItem:    () => null,
-  setItem:    () => {},
-  removeItem: () => {},
-};
+const _noStorage = { getItem:()=>null, setItem:()=>{}, removeItem:()=>{} };
 let SB = null, dbOk = false;
 try {
   if (CFG.url && !CFG.url.includes('YOUR_')) {
-    if (typeof supabase !== 'undefined' && supabase.createClient) {
-      SB = supabase.createClient(CFG.url, CFG.key, {
-        auth: {
-          persistSession:   false,
-          autoRefreshToken: false,
-          storage:          _noStorage,
-        }
-      });
-      dbOk = true;
-    }
+    SB = supabase.createClient(CFG.url, CFG.key, {
+      auth: { persistSession: false, autoRefreshToken: false, storage: _noStorage }
+    });
+    dbOk = true;
   }
-} catch(e) { console.warn('Supabase init gagal:', e.message); }
+} catch(e) { console.warn('Supabase:', e.message); }
 
 /* ============================================================
    STATE
@@ -736,16 +727,24 @@ async function doLogin() {
 }
 
 function enterApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
+  const land = q('pgLanding');
+  land.classList.remove('on');
+  land.style.cssText = 'display:none!important';
+  const app = q('appShell');
+  app.classList.add('on');
+  app.style.cssText = 'display:flex!important;width:100%';
   buildSB();
   nav('dashboard');
   if(dbOk) try{ loadLandMenus(); }catch(_){}
 }
 
 function enterEmployeeApp() {
-  q('pgLanding').classList.remove('on');
-  q('appShell').classList.add('on');
+  const land = q('pgLanding');
+  land.classList.remove('on');
+  land.style.cssText = 'display:none!important';
+  const app = q('appShell');
+  app.classList.add('on');
+  app.style.cssText = 'display:flex!important;width:100%';
   buildEmployeeSB();
   nav('kpi');
 }
