@@ -964,10 +964,10 @@ function buildSB() {
   ];
   if (isAdm) items.push(
     {sec:'Administrasi'},
-    {pg:'adminKpi',ic:IC.adminKpi,lb:'CRUD KPI'},
+    {pg:'adminKpi',ic:IC.adminKpi,lb:'Manajemen KPI'},
     {pg:'adminEmp',ic:IC.adminEmp,lb:'Data Karyawan'},
     {pg:'adminUsers',ic:IC.adminUsers,lb:'Manajemen User'},
-    {pg:'adminMenus',ic:IC.adminMenus,lb:'Menu Info'},
+    {pg:'adminMenus',ic:IC.adminMenus,lb:'Manajemen Info'},
   );
   q('sbNav').innerHTML = items.map(n => n.sec
     ? `<div class="sb-sec">${n.sec}</div>`
