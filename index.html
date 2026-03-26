@@ -254,6 +254,17 @@ textarea.fc{resize:vertical;min-height:80px;}
 .tg-pw{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:.85rem;}
 @media(max-width:768px){.sidebar{transform:translateX(-100%);}
 .sidebar.mob{transform:translateX(0);}.main{margin-left:0!important;}.pw{padding:16px;}.stats{grid-template-columns:1fr 1fr;}}
+
+/* ============================================================ RICH TEXT EDITOR ============================================================ */
+.rte-wrap{border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;}
+.rte-wrap:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
+.rte-bar{display:flex;align-items:center;gap:2px;padding:6px 8px;background:var(--slate-lt);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.rte-btn{background:#fff;border:1px solid var(--border);border-radius:5px;padding:4px 9px;font-family:inherit;font-size:.78rem;cursor:pointer;color:var(--slate-d);transition:.15s;line-height:1.4;}
+.rte-btn:hover{background:var(--blue-lt);border-color:var(--blue);color:var(--blue);}
+.rte-sep{width:1px;height:18px;background:var(--border);margin:0 4px;}
+.rte-body{min-height:90px;padding:10px 12px;font-family:inherit;font-size:.875rem;outline:none;color:var(--text);line-height:1.6;}
+.rte-body:empty:before{content:attr(data-placeholder);color:var(--muted);}
+.rte-body ul,.rte-body ol{padding-left:20px;}
 </style>
 </head>
 <body>
@@ -577,8 +588,6 @@ textarea.fc{resize:vertical;min-height:80px;}
 </div>
 
 <!-- ============================================================ SCRIPTS ============================================================ -->
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -639,6 +648,15 @@ const S = {
   _menuTab: 'guide', _sbCol: false,
   kpiSt: { savedToDb: false }
 };
+/* ============================================================
+   CUSTOM RICH TEXT EDITOR — no CDN needed
+============================================================ */
+function rteCmd(cmd) {
+  const ed = q('kNoteEditor');
+  if(!ed) return;
+  ed.focus();
+  document.execCommand(cmd, false, null);
+}
 const SESSION_KEY = 'kpi_session';
 
 /* Icon SVG — didefinisikan di sini agar tersedia untuk semua fungsi */
@@ -1129,7 +1147,17 @@ async function renderKpiForm(pc){
         <div class="card"><div class="card-h"><span class="card-t">Catatan &amp; Bukti Pendukung</span></div>
           <div class="card-b">
             <div class="fg"><label class="fl">Catatan / Deskripsi Capaian <span class="req">*</span></label>
-  <div id="kNoteEditor" style="background:#fff;border-radius:8px;"></div>
+  <div class="rte-wrap">
+  <div class="rte-bar">
+    <button type="button" class="rte-btn" onclick="rteCmd('bold')" title="Bold"><b>B</b></button>
+    <button type="button" class="rte-btn" onclick="rteCmd('italic')" title="Italic"><i>I</i></button>
+    <button type="button" class="rte-btn" onclick="rteCmd('underline')" title="Underline"><u>U</u></button>
+    <span class="rte-sep"></span>
+    <button type="button" class="rte-btn" onclick="rteCmd('insertUnorderedList')" title="Bullet List">&#8226; List</button>
+    <button type="button" class="rte-btn" onclick="rteCmd('insertOrderedList')" title="Numbered List">1. List</button>
+  </div>
+  <div id="kNoteEditor" class="rte-body" contenteditable="true" data-placeholder="Tulis deskripsi singkat capaian Anda..."></div>
+</div>
 </div>
             <div class="row2">
               <div class="fg"><label class="fl">Bukti Utama (JPG/PNG/PDF) <span class="req">*</span></label>
@@ -1161,16 +1189,7 @@ async function renderKpiForm(pc){
   }catch(e){setA('kFA','Gagal: '+esc(e.message));}
   finally{
     ldr();
-    // Init Quill setelah DOM siap
-    setTimeout(()=>{
-      if(window._quill) window._quill = null;
-      if(q('kNoteEditor')) window._quill = new Quill('#kNoteEditor',{
-        theme:'snow',
-        placeholder:'Tulis deskripsi singkat capaian Anda...',
-        modules:{toolbar:[['bold','italic','underline'],['clean'],
-          [{list:'ordered'},{list:'bullet'}]]}
-      });
-    },50);
+        // Custom RTE — no init needed
   }
 }
 function onKEmp(){ const e=S._empMap[val('kEmp')]; q('kNik').value=e?.nik||''; q('kJab').value=e?.title||''; q('kLok').value=e?.location||''; q('kOC').style.display='none'; q('kKS').style.display='none'; if(e&&val('kPer')) loadKObjs(); }
@@ -1248,8 +1267,8 @@ function onTtdCh(inp){
 }
 async function calcPreview(){
   const eid=val('kEmp'),pid=val('kPer'),oid=val('kObj'),
-    note=(window._quill?.getText()||'').trim(),
-    noteHtml=window._quill?.root?.innerHTML||'',
+    note=(q('kNoteEditor')?.innerText||'').trim(),
+    noteHtml=q('kNoteEditor')?.innerHTML||'',
     eviF=q('kEF').files[0],ttdF=q('kTF').files[0];
   setA('kFA','');
   if(!eid)return setA('kFA','Pilih karyawan.');if(!pid)return setA('kFA','Pilih periode.');
