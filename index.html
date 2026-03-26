@@ -1068,36 +1068,7 @@ function renderDashboardMain(pc) {
   `;
 }
 
-function renderDash(pc) {
-  console.log("RENDER DASH JALAN", pc);
-  pc.innerHTML = `
-    <div class="ph">
-      <div>
-        <div class="ph-h">Dashboard</div>
-        <div class="ph-sub">Selamat datang di sistem KPI</div>
-      </div>
-    </div>
 
-    <div class="stats">
-      <div class="stat y">
-        <div class="stat-ico">📊</div>
-        <div class="stat-v">0</div>
-        <div class="stat-l">Total KPI</div>
-      </div>
-      <div class="stat b">
-        <div class="stat-ico">👥</div>
-        <div class="stat-v">0</div>
-        <div class="stat-l">Karyawan</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-b">
-        Halo, ${S.user?.name || 'User'} 👋
-      </div>
-    </div>
-  `;
-}
 /* ============================================================
    LANDING MENUS
 ============================================================ */
